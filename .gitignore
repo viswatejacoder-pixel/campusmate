@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Secrets and local config (NEVER commit these)
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Test output
+coverage/
+
+# Local database dumps (may contain real data)
+backups/
+*.dump.sql
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
