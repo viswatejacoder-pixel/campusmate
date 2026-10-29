@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# Build output (client production build)
+client/dist/
+
 # Secrets and local config (NEVER commit these)
 .env
 .env.*

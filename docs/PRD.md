@@ -1,6 +1,6 @@
 # Product Requirements Document (PRD)
 
-Last updated: 2026-10-25 | Status: Draft for faculty proposal (26 Oct 2026)
+Last updated: 2026-10-29 | Status: Draft, revised for React + Vite (the 26 Oct 2026 proposal deadline has passed; see OQ-12)
 
 ## 1. Overview
 CampusMate is a responsive web application where a student keeps a personal list of academic tasks (assignments, lab records, exam prep) organized by subject, with deadlines and priorities. It is standalone: it does not connect to any university system.
@@ -23,8 +23,8 @@ Students track deadlines across many subjects in scattered notes and chats and m
 | ID | Requirement | Acceptance criteria |
 |---|---|---|
 | FR-1 | Registration | Name, email, password submitted. Valid input creates an account and the stored value is a bcrypt hash, never plaintext. Duplicate email is rejected with a clear message. Invalid fields show per-field errors. Password shorter than 8 characters is rejected. |
-| FR-2 | Login | Correct credentials start a session and open the dashboard. Wrong email or password gives one generic error and no session. Session cookie is HttpOnly. Protected API calls without a session return 401. |
-| FR-3 | Logout | Session is destroyed on the server. Afterwards `GET /api/auth/me` returns 401 and the dashboard redirects to login. |
+| FR-2 | Login | Correct credentials start a session and open the dashboard. Wrong email or password gives one generic error and no session. Session cookie is HttpOnly. Protected API calls without a session return 401. Opening `/dashboard` without a session redirects to `/login` (convenience only; the server enforces access). |
+| FR-3 | Logout | Session is destroyed on the server. Afterwards `GET /api/auth/me` returns 401 and the app redirects to `/login`. |
 | FR-4 | Dashboard | Logged-in student sees their name, summary counts, and only their own tasks. |
 | FR-5 | Subjects | Student can create, rename, and delete their own subjects. Names are unique per student. Deleting a subject that still has tasks is refused with a clear message. |
 | FR-6 | Create task | Title (required), subject (required), due date (required), priority (low/medium/high, default medium), description (optional). New task appears in the list without a full page reload. |
@@ -42,13 +42,13 @@ Students track deadlines across many subjects in scattered notes and chats and m
 
 ## 6. Non-functional requirements
 - **Security:** see [security.md](security.md) (hashed passwords, server-side sessions, parameterized SQL, server-side authorization).
-- **Simplicity:** minimal dependencies, readable code, no frontend framework.
+- **Simplicity:** minimal dependencies, readable code. Frontend is React + Vite with plain CSS; no UI component library, CSS framework, or state library unless approved (D-014, D-017).
 - **Reliability:** common failure cases handled; app does not crash on bad input.
 - **Browsers:** current Chrome and Edge (primary), Firefox, mobile Chrome.
 - **Performance:** adequate for one student's data (hundreds of tasks); no pagination in MVP.
 
 ## 7. Assumptions
-Runs locally (deployment not required unless confirmed, OQ-11). Single timezone. English UI. No password reset in MVP (documented limitation).
+Runs locally (deployment not required unless confirmed, OQ-11). Single timezone. English UI. No password reset in MVP (documented limitation). The database is MySQL 8.4 (D-021).
 
 ## 8. Optional future enhancements (NOT approved, only after MVP is done and approved by the author)
 Pagination; CSV export; dark mode; password reset by email; account deletion; rate limiting on login.

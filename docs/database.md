@@ -1,13 +1,14 @@
 # Database
 
-Last updated: 2026-10-25 | Status: Proposed schema (not yet created in MySQL, not yet tested)
+Last updated: 2026-10-29 | Status: Proposed schema (not yet created in the database, not yet tested)
 
-MySQL 8.x, InnoDB, `utf8mb4`. Database name: `campusmate`.
+Target: MySQL 8.4 (installed 8.4.13, service `MySQL84`, verified running 2026-10-29; D-021), InnoDB, `utf8mb4` (default collation `utf8mb4_0900_ai_ci`, case-insensitive, so emails differing only by case collide on the unique key). Database name: `campusmate`.
+The schema below uses only plain MySQL 8 features. It has **not been applied or tested yet**; T-020 does that and also checks that `express-mysql-session` creates its table. Use the default `caching_sha2_password` for the app user (`mysql_native_password` is disabled by default in 8.4).
 
 ## 1. Entities
 `users` 1 --- N `subjects` 1 --- N `tasks`; every task also belongs directly to a user. A composite foreign key makes the database itself guarantee that a task's subject belongs to the same user (defence in depth on top of server checks).
 
-## 2. Schema (planned `sql/schema.sql`)
+## 2. Schema (planned `server/sql/schema.sql`)
 ```sql
 CREATE TABLE IF NOT EXISTS users (
   id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -61,16 +62,17 @@ The `sessions` table is created automatically by `express-mysql-session` (if app
 - **Every task/subject query must include `user_id = ?`** taken from the session, never from the request body.
 - Account deletion is not an MVP feature, so cascade behaviour on user delete is untested.
 
-## 4. Local MySQL setup (planned; run as a MySQL admin; replace the password placeholder)
+## 4. Local database setup (planned; run as a database admin; replace the password placeholder)
+The MySQL 8.4 service (`MySQL84`) must be running (check: `Get-Service MySQL84`). The client is not on the system PATH; run it as `& "C:\Program Files\MySQL\MySQL Server 8.4\bin\mysql.exe" -u root -p` (enter your own root password when prompted; never paste it into chat, docs, or `.env`) or use MySQL Workbench. Do not expose port 3306 beyond your own machine.
 ```sql
 CREATE DATABASE IF NOT EXISTS campusmate CHARACTER SET utf8mb4;
 CREATE USER IF NOT EXISTS 'campusmate_app'@'localhost' IDENTIFIED BY '<choose-a-local-password>';
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE ON campusmate.* TO 'campusmate_app'@'localhost';
 ```
-`CREATE` is needed only so the session store can create its table; it can be revoked once the table exists. Put the same password in your local `.env`. Never use the MySQL `root` account in the app.
+`CREATE` is needed only so the session store can create its table; it can be revoked once the table exists. Put the same password in your local `server/.env`. Never use the `root` account in the app.
 
 ## 5. Seed data
-`sql/seed.sql` (optional, for demo screenshots) will use fictional users such as `demo.student@example.com`. Password hashes must be generated with a script at setup time, never hard-coded real passwords. Seed users must be clearly labelled demo data.
+`server/sql/seed.sql` (optional, for demo screenshots) will use fictional users such as `demo.student@example.com`. Password hashes must be generated with a script at setup time, never hard-coded real passwords. Seed users must be clearly labelled demo data.
 
 ## 6. Schema change process
-Edit `sql/schema.sql`, note the change in `CHANGELOG.md`, update this file and `api-spec.md`. For MVP there are no migration tools; a reset (drop and re-create the local DB) is acceptable.
+Edit `server/sql/schema.sql`, note the change in `CHANGELOG.md`, update this file and `api-spec.md`. For MVP there are no migration tools; a reset (drop and re-create the local DB) is acceptable.

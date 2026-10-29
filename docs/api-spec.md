@@ -1,10 +1,12 @@
 # API Specification
 
-Last updated: 2026-10-25 | Status: Proposed contract (nothing implemented or tested yet)
+Last updated: 2026-10-28 | Status: Proposed contract (nothing implemented or tested yet). The contract itself is unchanged by the move to React; only two notes in section 1 (single origin, JSON 404 for unknown `/api` paths) were added.
 
 ## 1. Conventions
 - Base path `/api`; JSON request and response bodies (`Content-Type: application/json`). Non-JSON bodies on POST/PUT/PATCH are rejected with 415.
 - Auth: session cookie (`connect.sid`, HttpOnly). All routes except register, login, and health require a session.
+- The React client calls relative URLs (`/api/...`), so the browser only ever talks to one origin. In development the Vite dev server proxies `/api` to Express (D-015); in a production build Express serves the built client itself (D-020). Either way no CORS configuration is needed. The client calls `GET /api/auth/me` on load to find out whether a session exists, and treats any 401 as "logged out".
+- Any `/api/...` path that matches no route returns a JSON 404 (`NOT_FOUND`), never the client's `index.html`.
 - IDs are positive integers; anything else returns 400.
 - Dates are `YYYY-MM-DD` strings. JSON field names are `camelCase`.
 - A resource that does not exist **or belongs to another user** returns 404 (no information leak).
