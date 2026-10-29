@@ -1,6 +1,16 @@
 # Testing
 
-Last updated: 2026-10-29 | Status: **Test plan only. No functional test has been run; every case is "Not run" except the partial ENV-06.**
+Last updated: 2026-10-29 | Status: **Environment cases (ENV) mostly Pass; authentication cases AUTH-01 to AUTH-08 and AUTH-10 Pass (automated), AUTH-09 Partial (DevTools check is manual); every other case is "Not run".**
+
+Scripted auth checks: `server/tests/auth.api.test.js` (Node's built-in `node:test` and `fetch`, no new dependencies). Start the server, then from `server/` run `$env:BASE_URL='http://localhost:3000'; node --test tests/auth.api.test.js` (3000 is the default `PORT`; use the port your server listens on). It creates fake `t030-<timestamp>-<tag>@example.test` accounts in the local development database, logs out its own sessions, deletes nothing, and prints the exact accounts it created plus cleanup SQL at the end. T-030 test data (2026-10-29): run 1 created user ids 1, 5, 6 (7 session rows were left behind by a since-fixed bug); run 2 created ids 7, 11, 12 (no leftovers); run 4 (resume session, output seen) created ids 19, 23, 24 (no leftover session rows). A run 3 was reported but its output was not preserved: its accounts are probably ids 13, 17, 18 (inferred only from the gaps in the id sequence, **not verified**). To remove all of it, in Workbench: first preview what would go, and only continue if every row is a `t030-...@example.test` account:
+```sql
+SELECT id, email FROM users WHERE id IN (1, 5, 6, 7, 11, 12, 13, 17, 18, 19, 23, 24);
+```
+Then delete (first the sessions, then the users; the second statement only matches test emails):
+```sql
+DELETE FROM sessions WHERE JSON_EXTRACT(data, '$.userId') IN (1, 5, 6, 7, 11, 12, 13, 17, 18, 19, 23, 24);
+DELETE FROM users WHERE id IN (1, 5, 6, 7, 11, 12, 13, 17, 18, 19, 23, 24) AND email LIKE 't030-%@example.test';
+```
 
 ## Approach (D-018)
 Manual testing with documented cases, no testing dependencies. Optional scripted API checks may use Node's built-in `node:test` and `fetch`. Use fake data only (e.g. `asha.test@example.com`, `ravi.test@example.com`), never real passwords or cookies.
@@ -28,16 +38,16 @@ Expected results follow [api-spec.md](api-spec.md) and [PRD.md](PRD.md). Result 
 ### Authentication
 | ID | Case | Expected | Result |
 |---|---|---|---|
-| AUTH-01 | Register a valid user | 201, no password hash in response | Not run |
-| AUTH-02 | Check `users.password_hash` in the DB | Starts with `$2`, not the password | Not run |
-| AUTH-03 | Register the same email again (also with different letter case) | 409 | Not run |
-| AUTH-04 | Register with missing fields, bad email, 7-char password | 400 with per-field messages | Not run |
-| AUTH-05 | Login correct credentials | 200, session cookie set | Not run |
-| AUTH-06 | Login wrong password; login unknown email | Same generic 401 message | Not run |
-| AUTH-07 | `GET /api/auth/me` logged in / logged out | 200 / 401 | Not run |
-| AUTH-08 | Logout, then reuse the old cookie | 401 | Not run |
-| AUTH-09 | Inspect the cookie in DevTools | HttpOnly and SameSite=Lax | Not run |
-| AUTH-10 | Malformed JSON body; non-JSON content type | Safe 400 / 415, no stack trace | Not run |
+| AUTH-01 | Register a valid user | 201, no password hash in response | Pass (2026-10-29, automated, `server/tests/auth.api.test.js`): 201 `{user:{id,name,email}}`, no password or hash in the body, session cookie set (register logs in). A messy email (spaces, upper case) was stored trimmed and lower-cased |
+| AUTH-02 | Check `users.password_hash` in the DB | Starts with `$2`, not the password | Pass (2026-10-29, automated, read through the app's DB pool; only the prefix was printed): `$2b$12$`, 60 characters, `bcrypt.compare` true, does not contain the password. Optional Workbench cross-check: `SELECT id, email, LEFT(password_hash, 7) AS prefix, CHAR_LENGTH(password_hash) AS len FROM users WHERE email LIKE 't030-%';` |
+| AUTH-03 | Register the same email again (also with different letter case) | 409 | Pass (2026-10-29, automated): exact, upper-case-with-spaces, and mixed-case repeats all give 409 `EMAIL_TAKEN`, no cookie, and one row in the DB |
+| AUTH-04 | Register with missing fields, bad email, 7-char password | 400 with per-field messages | Pass (2026-10-29, automated): empty object, no body, array body, bad email, `a@b`, SQL-looking email, 7 and 73 characters, 40 emoji (over 72 bytes), 101-character name, blank name, and non-string values all give 400 `VALIDATION_ERROR` with exactly the expected field keys, no cookie, and no account created |
+| AUTH-05 | Login correct credentials | 200, session cookie set | Pass (2026-10-29, automated): 200 `{user}`, cookie set, a new session id after login (the old id then gives 401, so the session is regenerated), upper-case email also logs in. AUTH-05b: register regenerates the session the same way |
+| AUTH-06 | Login wrong password; login unknown email | Same generic 401 message | Pass (2026-10-29, automated): wrong password and unknown email return identical 401 bodies ("Invalid email or password.") with no cookie; SQL-looking login gives 401; missing or non-text fields give 400; a 72-character password logs in, the same plus extra characters gives 401 (bcrypt truncation guard). Response timing was not measured |
+| AUTH-07 | `GET /api/auth/me` logged in / logged out | 200 / 401 | Pass (2026-10-29, automated): 200 with `{id,name,email}` and no hash; no cookie, a garbage cookie, and an empty cookie all give 401 `UNAUTHENTICATED` |
+| AUTH-08 | Logout, then reuse the old cookie | 401 | Pass (2026-10-29, automated): logout gives 204 with an empty body and clears the cookie; the `sessions` row is deleted (1 to 0); the old cookie gives 401; logout again, and logout with no cookie, both give 204 |
+| AUTH-09 | Inspect the cookie in DevTools | HttpOnly and SameSite=Lax | Partial (2026-10-29): the `Set-Cookie` header was checked automatically: `HttpOnly; SameSite=Lax; Path=/`, no `Secure` in development, lifetime about 8.0 h; with `NODE_ENV=production` behind a simulated HTTPS proxy header `Secure` is added (throwaway script). The DevTools inspection itself is a **manual check** and is not done |
+| AUTH-10 | Malformed JSON body; non-JSON content type | Safe 400 / 415, no stack trace | Pass (2026-10-29, automated, on the real auth endpoints): malformed JSON gives 400 `VALIDATION_ERROR` and the body (a fake password) is not echoed; `text/plain` and form bodies give 415; a body over 10 KB gives 413; no stack trace, SQL, or file paths in any response. A body-less POST (`Content-Length: 0`) is accepted: fixed in `requireJson` on 2026-10-29 after the first run returned 415 for it |
 
 ### Subjects
 | ID | Case | Expected | Result |
@@ -103,13 +113,14 @@ Expected results follow [api-spec.md](api-spec.md) and [PRD.md](PRD.md). Result 
 | ID | Case | Expected | Result |
 |---|---|---|---|
 | SEC-01 | `npm audit` in `server/` and `client/` | Results recorded; remaining issues explained | Not run |
-| SEC-02 | Search code for string-built SQL, password logging, `innerHTML`, `dangerouslySetInnerHTML`, `VITE_` secrets | No unintended hits | Not run |
+| SEC-02 | Search code for string-built SQL, password logging, `innerHTML`, `dangerouslySetInnerHTML`, `VITE_` secrets | No unintended hits | Partial (2026-10-29): server side only (no `client/` yet). Every SQL call in `server/src/models/userModel.js` is `pool.execute` with `?` placeholders; no string-built SQL. Every `console.*` call in `server/src` logs a fixed message or an error code only; none logs a password, hash, or request body. `innerHTML`, `dangerouslySetInnerHTML`, and `VITE_` checks wait for the client |
 | SEC-03 | Review git history for committed secrets | None found | Not run |
 | SEC-04 | Database port reachable from another machine? | No | Not run |
 
 ## Results log
-No test runs yet.
-
 | Date | Scope | Passed | Failed | Not run | Notes |
 |---|---|---|---|---|---|
-| | | | | | |
+| 2026-10-29 | `auth.api.test.js` run 1 (regression + AUTH-01 to AUTH-10, 12 checks) | 10 | 2 | 0 | AUTH-04 and AUTH-08 failed: a body-less POST (`Content-Length: 0`) got 415 from `requireJson`. Real bug, would have broken logout from a browser; fixed the same day |
+| 2026-10-29 | `auth.api.test.js` run 2 (same 12 checks, after the fix) | 12 | 0 | 0 | No leftover session rows. AUTH-09's DevTools inspection remains a manual check |
+| 2026-10-29 | `auth.api.test.js` run 3 (previous session) | 12 (reported) | 0 | 0 | Reported as 12 of 12 with no code changes, but the output was not preserved, so it is not counted as evidence. Its test accounts were not recorded (see the cleanup note at the top) |
+| 2026-10-29 | `auth.api.test.js` run 4 (resume session, `BASE_URL=http://localhost:3000`, server started after the last code change) | 12 | 0 | 0 | Output seen: regression, AUTH-01 to AUTH-08 (incl. 05b), AUTH-09 header check, AUTH-10. Hash prefix `$2b$12$`, length 60. Cookie: `HttpOnly; SameSite=Lax; Path=/`, no Secure, about 8.0 h. Created ids 19, 23, 24; 0 leftover session rows. AUTH-09 DevTools view still manual |

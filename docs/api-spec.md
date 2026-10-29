@@ -1,10 +1,10 @@
 # API Specification
 
-Last updated: 2026-10-28 | Status: Proposed contract (nothing implemented or tested yet). The contract itself is unchanged by the move to React; only two notes in section 1 (single origin, JSON 404 for unknown `/api` paths) were added.
+Last updated: 2026-10-29 | Status: Proposed contract. Health and the four auth endpoints are implemented and covered by scripted tests (T-030, AUTH-01 to AUTH-10); everything else is not implemented yet. The contract itself is unchanged by the move to React; only two notes in section 1 (single origin, JSON 404 for unknown `/api` paths) were added.
 
 ## 1. Conventions
-- Base path `/api`; JSON request and response bodies (`Content-Type: application/json`). Non-JSON bodies on POST/PUT/PATCH are rejected with 415.
-- Auth: session cookie (`connect.sid`, HttpOnly). All routes except register, login, and health require a session.
+- Base path `/api`; JSON request and response bodies (`Content-Type: application/json`). Non-JSON bodies are rejected with 415; a body-less request (including `Content-Length: 0`) is fine, and a body over 10 KB gets 413.
+- Auth: session cookie (`connect.sid`, HttpOnly). All routes except register, login, logout (idempotent, always 204), and health require a session.
 - The React client calls relative URLs (`/api/...`), so the browser only ever talks to one origin. In development the Vite dev server proxies `/api` to Express (D-015); in a production build Express serves the built client itself (D-020). Either way no CORS configuration is needed. The client calls `GET /api/auth/me` on load to find out whether a session exists, and treats any 401 as "logged out".
 - Any `/api/...` path that matches no route returns a JSON 404 (`NOT_FOUND`), never the client's `index.html`.
 - IDs are positive integers; anything else returns 400.
@@ -25,6 +25,7 @@ Last updated: 2026-10-28 | Status: Proposed contract (nothing implemented or tes
 | 404 | `NOT_FOUND` | Missing or not owned |
 | 409 | `EMAIL_TAKEN` / `SUBJECT_EXISTS` / `SUBJECT_IN_USE` | Conflict |
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | Body not JSON |
+| 413 | `PAYLOAD_TOO_LARGE` | JSON body over 10 KB |
 | 500 | `SERVER_ERROR` | Unexpected; generic message only |
 
 ## 2. Objects
@@ -50,7 +51,7 @@ Last updated: 2026-10-28 | Status: Proposed contract (nothing implemented or tes
 | Method + path | Body | Success | Failures |
 |---|---|---|---|
 | `POST /api/auth/register` | `{name, email, password}` | `201 { user }`; also logs the user in | 400, 409 `EMAIL_TAKEN` |
-| `POST /api/auth/login` | `{email, password}` | `200 { user }`; session id regenerated | 400, 401 generic "Invalid email or password." |
+| `POST /api/auth/login` | `{email, password}` | `200 { user }`; session id regenerated | 400 only when email or password is missing or not text; every other failure (unknown email, wrong password, password over 72 bytes) is the generic 401 "Invalid email or password." |
 | `POST /api/auth/logout` | none | `204` | none (idempotent) |
 | `GET /api/auth/me` | none | `200 { user }` | 401 |
 
@@ -83,7 +84,7 @@ Route order: `/summary` must be registered before `/:id`.
 |---|---|
 | `name` (user) | trimmed, 1-100 chars |
 | `email` | trimmed, lower-cased, valid format, max 255 |
-| `password` | 8-72 characters (bcrypt limit); never trimmed or logged |
+| `password` | 8-72 characters (bcrypt limit) and at most 72 bytes in UTF-8, because bcrypt ignores everything after 72 bytes; never trimmed or logged |
 | subject `name` | trimmed, 1-100 chars |
 | `title` | trimmed, 1-150 chars |
 | `description` | optional, max 1000 chars |

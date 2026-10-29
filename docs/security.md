@@ -26,6 +26,7 @@ Express serves the built client (`client/dist`) when that folder exists (D-020).
 - CSRF protection relies on SameSite cookies, not tokens.
 - Local development runs over HTTP, so cookies are not `secure` there.
 - No automated dependency vulnerability scanning beyond running `npm audit` manually (in both `server/` and `client/`).
+- `npm audit` (2026-10-29) reports 2 advisories in the `mysql2` (<=3.23.0) that `express-mysql-session@3.0.3` bundles as its own nested dependency: a credential downgrade to a cleartext auth plugin, and a denial of service in the compressed protocol. The app's own `mysql2` is 3.24.6 and not affected, and the session store is given the app's shared pool, so the nested copy is not used to connect (it only loads, see `server/src/config/session.js`). Accepted as a low risk for a local demo (local DB, no compression, no untrusted MySQL server). No `overrides` entry and no `npm audit fix --force` (it would downgrade the session store). Decision D-024 (author, 2026-10-29). Re-run `npm audit` in T-100 and record the result.
 - The local database is MySQL 8.4 (D-021). The app never uses `root`; it uses the limited `campusmate_app` user. Keep port 3306 reachable only from your own machine (default MySQL installs listen on all interfaces unless `bind-address` is restricted; checked in SEC-04). Do not use `mysql_native_password` for the app user; MySQL 8.4 disables it by default and the default `caching_sha2_password` works with `mysql2`.
 
 ## 4. Pre-submission security checklist (all unchecked)
