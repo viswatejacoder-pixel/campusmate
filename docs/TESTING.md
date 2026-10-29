@@ -1,6 +1,6 @@
 # Testing
 
-Last updated: 2026-10-29 | Status: **Environment cases (ENV) mostly Pass; authentication cases AUTH-01 to AUTH-08 and AUTH-10 Pass (automated), AUTH-09 Partial (DevTools check is manual); every other case is "Not run".**
+Last updated: 2026-10-29 | Status: **Environment cases (ENV) mostly Pass; authentication cases AUTH-01 to AUTH-08 and AUTH-10 Pass (automated), AUTH-09 Partial (DevTools check is manual); subject cases SUB-01 to SUB-05 Pass (automated, T-040, uncommitted); every other case is "Not run".**
 
 Scripted auth checks: `server/tests/auth.api.test.js` (Node's built-in `node:test` and `fetch`, no new dependencies). Start the server, then from `server/` run `$env:BASE_URL='http://localhost:3000'; node --test tests/auth.api.test.js` (3000 is the default `PORT`; use the port your server listens on). It creates fake `t030-<timestamp>-<tag>@example.test` accounts in the local development database, logs out its own sessions, deletes nothing, and prints the exact accounts it created plus cleanup SQL at the end. T-030 test data (2026-10-29): run 1 created user ids 1, 5, 6 (7 session rows were left behind by a since-fixed bug); run 2 created ids 7, 11, 12 (no leftovers); run 4 (resume session, output seen) created ids 19, 23, 24 (no leftover session rows). A run 3 was reported but its output was not preserved: its accounts are probably ids 13, 17, 18 (inferred only from the gaps in the id sequence, **not verified**). To remove all of it, in Workbench: first preview what would go, and only continue if every row is a `t030-...@example.test` account:
 ```sql
@@ -50,13 +50,24 @@ Expected results follow [api-spec.md](api-spec.md) and [PRD.md](PRD.md). Result 
 | AUTH-10 | Malformed JSON body; non-JSON content type | Safe 400 / 415, no stack trace | Pass (2026-10-29, automated, on the real auth endpoints): malformed JSON gives 400 `VALIDATION_ERROR` and the body (a fake password) is not echoed; `text/plain` and form bodies give 415; a body over 10 KB gives 413; no stack trace, SQL, or file paths in any response. A body-less POST (`Content-Length: 0`) is accepted: fixed in `requireJson` on 2026-10-29 after the first run returned 415 for it |
 
 ### Subjects
+Scripted subjects checks: `server/tests/subjects.api.test.js` (`node:test` and `fetch` only). Start the server, then from `server/` run `$env:BASE_URL='http://localhost:3001'; node --test tests/subjects.api.test.js` (use the port your server listens on, and a server started after the last code change; check `$env:NODE_ENV` is not `production`). It creates fake `t040-<timestamp>-<tag>@example.test` accounts and their subjects in the local development database. The tasks API does not exist yet, so one test inserts a single task row directly to prove the 409 and deletes only that row (by id and `user_id`). Nothing else is deleted; at the end it prints the accounts it created and cleanup SQL. T-040 test data (2026-10-29): run 1 created user ids 37 to 49 (13 accounts, 22 subjects, 0 tasks, 0 session rows left). To remove them, in Workbench: preview first, and continue only if every row is a `t040-...@example.test` account:
+```sql
+SELECT id, email FROM users WHERE id IN (37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49);
+```
+Then delete in this order (deleting a user also deletes that user's subjects):
+```sql
+DELETE FROM sessions WHERE JSON_EXTRACT(data, '$.userId') IN (37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49);
+DELETE FROM tasks WHERE user_id IN (37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49);
+DELETE FROM users WHERE id IN (37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49) AND email LIKE 't040-%@example.test';
+```
+
 | ID | Case | Expected | Result |
 |---|---|---|---|
-| SUB-01 | Create, list, rename, delete a subject | Works; list reflects changes | Not run |
-| SUB-02 | Duplicate subject name for the same user | 409 or 400 per api-spec | Not run |
-| SUB-03 | Same name used by user B | Allowed | Not run |
-| SUB-04 | Delete a subject that has tasks | 409 with a clear message | Not run |
-| SUB-05 | User B reads/renames/deletes user A's subject | 404 | Not run |
+| SUB-01 | Create, list, rename, delete a subject | Works; list reflects changes | Pass (2026-10-29, automated, `server/tests/subjects.api.test.js`): create gives 201 `{subject:{id,name}}` (name trimmed, row owned by the caller in the DB); list gives 200 `{subjects}` sorted by name (empty list for a new user); rename gives 200 and the list reflects it; delete gives 204 with an empty body; repeating delete or rename on the removed id gives 404. Also Pass: names of exactly 100 characters (including 100 emoji) are accepted and 101 are rejected; blank, missing, non-text, array-body, and malformed-JSON input gives 400 `VALIDATION_ERROR` (`text/plain` gives 415) and changes nothing; ids `abc`, `0`, `-1`, `1.5`, `1e2`, `01`, `0x1`, `4294967296` give 400 `BAD_ID` and a valid missing id gives 404; SQL-looking, `<script>`, and `100% _wild_ \ "quoted"` names are stored and returned as plain text and the table stays intact; a `userId` in the body is ignored; every subjects route returns 401 with no, garbage, empty, or logged-out cookies and changes nothing |
+| SUB-02 | Duplicate subject name for the same user | 409 or 400 per api-spec | Pass (2026-10-29, automated): create with the same name, the name padded with spaces, and the same name in different letter case (`MATH` vs `Math`; the database collation is case-insensitive) all give 409 `SUBJECT_EXISTS` and leave one row; renaming to another of the user's names gives 409 and the subject is unchanged; renaming to its own name, changing only its case, and renaming to a padded new name give 200. Six simultaneous creates of one name gave one 201 and five 409 (one row); four simultaneous renames to one name gave one 200 and three 409 (one row) |
+| SUB-03 | Same name used by user B | Allowed | Pass (2026-10-29, automated): user B creates "Shared Name" while user A already has it: 201 with a different id; each user's list shows only their own subjects |
+| SUB-04 | Delete a subject that has tasks | 409 with a clear message | Pass (2026-10-29, automated; the task row was inserted directly because the tasks API does not exist yet): 409 `SUBJECT_IN_USE` ("This subject still has tasks. Remove or reassign its tasks first."), the subject and the task are untouched, renaming the in-use subject still works (200), another user deleting it gets 404 (not 409); after the test removed its task row, delete gives 204. Only the composite foreign key `ON DELETE RESTRICT` was exercised; delete-while-a-task-is-being-created concurrency was not tested |
+| SUB-05 | User B reads/renames/deletes user A's subject | 404 | Pass (2026-10-29, automated): B's list never contains A's subjects; B renaming or deleting A's ids (including renaming to a name B already owns, and with a forged `userId` in the body) gives the same 404 body as a nonexistent id, so nothing reveals the id exists; A's subjects and names are unchanged afterwards. There is no `GET /api/subjects/:id` endpoint in the spec, so "reads" means the list only |
 
 ### Tasks (API)
 | ID | Case | Expected | Result |
@@ -113,7 +124,7 @@ Expected results follow [api-spec.md](api-spec.md) and [PRD.md](PRD.md). Result 
 | ID | Case | Expected | Result |
 |---|---|---|---|
 | SEC-01 | `npm audit` in `server/` and `client/` | Results recorded; remaining issues explained | Not run |
-| SEC-02 | Search code for string-built SQL, password logging, `innerHTML`, `dangerouslySetInnerHTML`, `VITE_` secrets | No unintended hits | Partial (2026-10-29): server side only (no `client/` yet). Every SQL call in `server/src/models/userModel.js` is `pool.execute` with `?` placeholders; no string-built SQL. Every `console.*` call in `server/src` logs a fixed message or an error code only; none logs a password, hash, or request body. `innerHTML`, `dangerouslySetInnerHTML`, and `VITE_` checks wait for the client |
+| SEC-02 | Search code for string-built SQL, password logging, `innerHTML`, `dangerouslySetInnerHTML`, `VITE_` secrets | No unintended hits | Partial (2026-10-29): server side only (no `client/` yet). Every SQL call in `server/src/models/userModel.js` and `subjectModel.js` is `pool.execute` with `?` placeholders (grep of `subjectModel.js` and `subjectController.js` for `execute(`, `query(`, and template placeholders, 2026-10-29); no string-built SQL. Every `console.*` call in `server/src` logs a fixed message or an error code only; none logs a password, hash, or request body. `innerHTML`, `dangerouslySetInnerHTML`, and `VITE_` checks wait for the client |
 | SEC-03 | Review git history for committed secrets | None found | Not run |
 | SEC-04 | Database port reachable from another machine? | No | Not run |
 
@@ -124,3 +135,4 @@ Expected results follow [api-spec.md](api-spec.md) and [PRD.md](PRD.md). Result 
 | 2026-10-29 | `auth.api.test.js` run 2 (same 12 checks, after the fix) | 12 | 0 | 0 | No leftover session rows. AUTH-09's DevTools inspection remains a manual check |
 | 2026-10-29 | `auth.api.test.js` run 3 (previous session) | 12 (reported) | 0 | 0 | Reported as 12 of 12 with no code changes, but the output was not preserved, so it is not counted as evidence. Its test accounts were not recorded (see the cleanup note at the top) |
 | 2026-10-29 | `auth.api.test.js` run 4 (resume session, `BASE_URL=http://localhost:3000`, server started after the last code change) | 12 | 0 | 0 | Output seen: regression, AUTH-01 to AUTH-08 (incl. 05b), AUTH-09 header check, AUTH-10. Hash prefix `$2b$12$`, length 60. Cookie: `HttpOnly; SameSite=Lax; Path=/`, no Secure, about 8.0 h. Created ids 19, 23, 24; 0 leftover session rows. AUTH-09 DevTools view still manual |
+| 2026-10-29 | `subjects.api.test.js` run 1 (`BASE_URL=http://localhost:3001`, fresh server started after the last code change, `NODE_ENV=development`; 10 test groups covering SUB-01 to SUB-05 plus regression, unauthorized, validation, ids, injection, race) | 10 | 0 | 0 | Output seen. Created user ids 37 to 49 (22 subjects, 0 tasks, 0 session rows left). The auth suite was not re-run after the `app.js` change (only the subjects router was mounted); the subjects run re-checks health, the JSON 404, and `auth/me` |

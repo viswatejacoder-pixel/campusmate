@@ -7,6 +7,7 @@ import pool from './config/db.js';
 import { sessionMiddleware } from './config/session.js';
 import requireJson from './middleware/requireJson.js';
 import authRoutes from './routes/authRoutes.js';
+import subjectRoutes from './routes/subjectRoutes.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -34,6 +35,7 @@ app.use('/api', sessionMiddleware);
 
 // --- API routers; later phases mount theirs here, above the /api 404 ---
 app.use('/api/auth', authRoutes);
+app.use('/api/subjects', subjectRoutes);
 
 // Unknown /api paths always get a JSON 404, never the client's index.html.
 app.use('/api', notFound);

@@ -63,6 +63,8 @@ Last updated: 2026-10-29 | Status: Proposed contract. Health and the four auth e
 | `PUT /api/subjects/:id` | `{name}` | `200 { subject }` | 400, 404, 409 |
 | `DELETE /api/subjects/:id` | none | `204` | 404, 409 `SUBJECT_IN_USE` |
 
+Behaviour (implemented and scripted-tested in T-040, SUB-01 to SUB-05): all four routes need a session (401 comes before any id or body check). A subject belongs to the logged-in user only; an id that is missing or owned by someone else gives the same 404, and a `userId` in the body is ignored. Names are trimmed and unique per user, also when they differ only in letter case (409 `SUBJECT_EXISTS`); renaming a subject to its own name returns 200. A malformed id (`abc`, `0`, `-1`, `1.5`, `01`, above 4294967295) gives 400 `BAD_ID`. Deleting a subject that tasks reference gives 409 `SUBJECT_IN_USE`; renaming it is still allowed.
+
 ### Tasks (auth required)
 | Method + path | Body | Success | Failures |
 |---|---|---|---|
