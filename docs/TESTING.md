@@ -18,11 +18,11 @@ Expected results follow [api-spec.md](api-spec.md) and [PRD.md](PRD.md). Result 
 ### Setup and environment
 | ID | Case | Expected | Result |
 |---|---|---|---|
-| ENV-01 | `GET /api/health` with DB up | 200 `{status: ok}` | Not run |
-| ENV-02 | Remove a required env var, start server | Refuses to start with a clear message | Not run |
-| ENV-03 | Stop the DB, call health | Safe error, no stack trace | Not run |
+| ENV-01 | `GET /api/health` with DB up | 200 `{status: ok}` | Pending T-020 (needs the `campusmate_app` user). 2026-10-29: with the user absent, health returned 503 `DB_UNAVAILABLE` as designed |
+| ENV-02 | Remove a required env var, start server | Refuses to start with a clear message | Pass (2026-10-29): missing `DB_NAME` gives exit 1 and a message naming the variable (no values printed); the template placeholder `DB_PASSWORD` is also refused |
+| ENV-03 | Stop the DB, call health | Safe error, no stack trace | Pass (2026-10-29): unreachable DB (`ECONNREFUSED`) and refused login (`ER_ACCESS_DENIED_ERROR`) both return 503 `DB_UNAVAILABLE` with no details or stack; only the error code is logged. Tested by pointing at a closed port, not by stopping the service |
 | ENV-04 | `SHOW TABLES`; re-run `schema.sql` | Three tables; no error on re-run | Not run |
-| ENV-05 | `git ls-files` | No `.env`, `node_modules`, or `client/dist` | Not run |
+| ENV-05 | `git ls-files` | No `.env`, `node_modules`, or `client/dist` | Partial (2026-10-29): before the T-010 commit, none tracked and both `server/.env` and `node_modules/` are ignored; re-run after committing |
 | ENV-06 | `Get-Service MySQL84`; `SELECT VERSION();` as the app user | Service Running; version 8.4.x | Partial (2026-10-29): service Running and `mysqld --version` = 8.4.13 verified; `SELECT VERSION()` not run |
 
 ### Authentication
