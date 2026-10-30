@@ -1,6 +1,6 @@
 # API Specification
 
-Last updated: 2026-10-29 | Status: Proposed contract. Health and the four auth endpoints are implemented and covered by scripted tests (T-030, AUTH-01 to AUTH-10); everything else is not implemented yet. The contract itself is unchanged by the move to React; only two notes in section 1 (single origin, JSON 404 for unknown `/api` paths) were added.
+Last updated: 2026-10-30 | Status: Proposed contract. Health, the four auth endpoints (T-030), the four subjects endpoints (T-040) and the seven tasks endpoints (T-050, uncommitted) are implemented and covered by scripted tests; there is nothing else in the contract. The contract itself is unchanged by the move to React; only two notes in section 1 (single origin, JSON 404 for unknown `/api` paths) were added.
 
 ## 1. Conventions
 - Base path `/api`; JSON request and response bodies (`Content-Type: application/json`). Non-JSON bodies are rejected with 415; a body-less request (including `Content-Length: 0`) is fine, and a body over 10 KB gets 413.
@@ -80,6 +80,16 @@ Route order: `/summary` must be registered before `/:id`.
 
 **`GET /api/tasks` query parameters** (all optional, combined with AND):
 `q` (text, max 100; matches title/description), `subjectId`, `priority` (`low|medium|high`), `status` (`all|pending|completed|overdue`, default `all`), `dueFrom`, `dueTo` (dates), `sort` (`dueDate|priority|createdAt`, default `dueDate`), `order` (`asc|desc`, default `asc`).
+
+Behaviour (implemented and scripted-tested in T-050, TASK-01 to TASK-09 and FIL-01 to FIL-05):
+- All seven routes need a session; 401 comes before any id, body or query check. Ids use the same rules as subjects (`BAD_ID` for `abc`, `0`, `-1`, `1.5`, `01`, above 4294967295). A task that is missing or owned by someone else gives the same 404 `NOT_FOUND`; a `userId`, `id`, `isCompleted` or `completedAt` in a create or edit body is ignored.
+- `POST` and `PUT` take the same body. `PUT` replaces all five editable fields: an omitted `description` is cleared and an omitted `priority` becomes `medium`; it never changes completion. `title` and `description` are trimmed; an empty or blank `description` is stored as null. `subjectId` must be a JSON number (the text `"3"` is a 400). Validation errors give 400 `VALIDATION_ERROR` with `error.fields`.
+- A `subjectId` that does not exist or belongs to someone else gives 400 `VALIDATION_ERROR` with `fields.subjectId: "Subject not found."`, identical for both cases. For `PUT` the task is checked first, so another user's task is 404 whatever `subjectId` is sent. The composite foreign key also enforces it in the database.
+- `PATCH /api/tasks/:id/complete` needs exactly `{isCompleted: true|false}` (anything else is 400 `isCompleted`). Completing sets `completedAt`; completing again keeps the first `completedAt`; un-completing sets it to null.
+- `isOverdue` = not completed and `dueDate` before today; `isDueSoon` = not completed and `dueDate` from today up to and including today + 3 days (OQ-6). Today is the database server's `CURDATE()` (OQ-10). Completed tasks are never overdue or due soon; the two flags never both hold.
+- `createdAt`, `updatedAt` and `completedAt` are ISO-8601 UTC strings without milliseconds (`2026-10-25T10:00:00Z`); `description` is null when absent.
+- `GET /api/tasks/summary` returns `{pending, completed, overdue, dueSoon}`: `pending` is every task that is not completed (so it includes the overdue and due-soon ones), `overdue` and `dueSoon` are subsets of `pending` that do not overlap.
+- List filters: a parameter that is present must be valid or the answer is 400 `VALIDATION_ERROR` naming it (an empty `subjectId`, `priority`, `status`, `sort`, `order`, `dueFrom` or `dueTo` is invalid; an empty or blank `q` means no text filter; a repeated parameter is invalid; unknown parameters are ignored). `dueTo` before `dueFrom` is a 400 on `dueTo`; both ends are inclusive. `subjectId` of another user's or a missing subject is not an error: it matches nothing and returns an empty list. `q` is trimmed, 1-100 characters, matches title or description ignoring case, and `%` and `_` match literally. `status=overdue` uses the same rule as `isOverdue`. Sorting: `priority` orders low, medium, high (`desc` reverses); ties go by due date ascending and then id; `dueDate` and `createdAt` break ties by id in the same direction.
 
 ## 4. Validation rules
 | Field | Rule |

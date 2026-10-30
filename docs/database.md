@@ -56,7 +56,8 @@ CREATE TABLE IF NOT EXISTS tasks (
 The `sessions` table is created automatically by `express-mysql-session` (if approved, D-008/D-007).
 
 ## 3. Design notes
-- **Overdue / due soon are derived, not stored:** `is_completed = 0 AND due_date < CURDATE()` (overdue); `is_completed = 0 AND due_date BETWEEN CURDATE() AND CURDATE() + INTERVAL 3 DAY` (due soon). Nothing needs a nightly update job.
+- **Overdue / due soon are derived, not stored:** `is_completed = 0 AND due_date < CURDATE()` (overdue); `is_completed = 0 AND due_date BETWEEN CURDATE() AND CURDATE() + INTERVAL 3 DAY` (due soon). Nothing needs a nightly update job. Implemented in `server/src/models/taskModel.js` (T-050): the same two expressions are used for the `isOverdue`/`isDueSoon` flags, the `status=overdue` filter and the summary counts, so they always agree. `CURDATE()` is the MySQL server's date (OQ-10); on the development machine the MySQL time zone is `SYSTEM` (IST) and matched the Node date.
+- **Timestamps:** `created_at` and `updated_at` are `TIMESTAMP`; `completed_at` is a `DATETIME` set with `NOW()` in the MySQL session time zone. The API reads all three with `UNIX_TIMESTAMP()` and returns ISO-8601 UTC, so the output does not depend on the session time zone.
 - **Email** is stored lower-cased and trimmed by the server.
 - **Subject delete** is blocked while tasks reference it (`ON DELETE RESTRICT`); the API turns this into a 409 with a clear message.
 - **Every task/subject query must include `user_id = ?`** taken from the session, never from the request body.
