@@ -1,6 +1,6 @@
 # Architecture
 
-Last updated: 2026-10-29 | Status: Proposed (nothing implemented yet). Revised for React + Vite (see DECISIONS D-014 to D-020).
+Last updated: 2026-10-30 | Status: Design; the server API (T-030 to T-050) and the client scaffold (T-060) are implemented, the UI pages are not. Revised for React + Vite (see DECISIONS D-014 to D-020).
 
 ## 1. Overview
 One repository, two parts:
