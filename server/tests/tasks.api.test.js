@@ -46,8 +46,14 @@ async function makeUser(tag) {
   const email = `${PREFIX}${tag}@example.test`;
   const r = await call('POST', '/api/auth/register', { body: { name: `T050 ${tag}`, email, password: PASSWORD } });
   assert.equal(r.status, 201, `register ${tag}`);
-  assert.ok(r.cookie, 'register sets a session cookie');
-  return { id: r.json.user.id, email, cookie: r.cookie };
+  assert.equal(r.cookie, null, 'register no longer logs the user in (T-075)');
+  await pool.execute(
+    'UPDATE users SET email_verified_at = NOW(), verification_token_hash = NULL, verification_expires_at = NULL WHERE email = ?',
+    [email],
+  ); // stands in for clicking the emailed link; the raw token is not readable from the DB
+  const l = await call('POST', '/api/auth/login', { body: { email, password: PASSWORD } });
+  assert.equal(l.status, 200, `login ${tag}`);
+  return { id: l.json.user.id, email, cookie: l.cookie };
 }
 
 const mkSubject = async (u, name) => {

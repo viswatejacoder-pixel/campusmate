@@ -14,15 +14,16 @@ Last updated: 2026-10-29 | Status: Planned controls only. **Nothing below has be
 | S-7 | Secret leakage | Secrets only in `server/.env`; `.env` git-ignored (`server/.env.example` has placeholders only); the client has no secrets, and nothing sensitive may go in a `VITE_` variable because those are bundled into the browser code; `client/dist/` is git-ignored | `git ls-files` shows no `.env`; search `client/` for `VITE_` and secrets; review first commit |
 | S-8 | Information leakage | Generic login error; 404 for others' resources; generic 500 message; no stack traces to client; DB user limited to the app database | Trigger errors and inspect responses |
 | S-9 | Bad input | Server-side validation of all fields, IDs, enums, lengths; JSON body size limit (e.g. 10kb) | Validation tests in TESTING.md |
-| S-10 | Brute-force login | Not in MVP. Optional: rate limit (needs approval of dependency) | Listed as residual risk |
+| S-10 | Brute-force login | In-house in-memory rate limits on register, login, verify-email and resend (T-075, D-027); no per-account lockout | Listed as residual risk |
+| S-V | Unowned mailbox registering, token theft or replay, enumeration, mail flooding (T-075) | 256-bit random single-use token, only the SHA-256 hash stored, 30-minute expiry, atomic conditional UPDATE, unverified accounts cannot log in (403 only after a correct password), generic 400/202 responses, 60 s resend cooldown, in-house per-IP and per-email rate limits, fixed `APP_BASE_URL` (never the Host header), mail failures logged as a short code only | `auth.verification.test.js`, `auth.ratelimit.test.js`, `rateLimit.test.js`, `mailer.test.js`; DB check that only hashes are stored |
 
 ## 2. Production-specific settings (only if hosted, OQ-11)
 `NODE_ENV=production`; HTTPS required; `cookie.secure=true`; `app.set('trust proxy', 1)` when behind a proxy; strong unique `SESSION_SECRET`; database not exposed to the internet; consider `helmet` and login rate limiting.
 Express serves the built client (`client/dist`) when that folder exists (D-020). The cookie `secure` flag follows `NODE_ENV` only, so a **local demo of the built app over plain HTTP must run with `NODE_ENV=development`**; `secure` cookies need HTTPS and would otherwise break login. Never run with `NODE_ENV=development` on a real host.
 
 ## 3. Known residual risks (to state honestly in the report)
-- No password reset and no email verification.
-- No login rate limiting or account lockout in MVP.
+- No password reset. Email verification and rate limiting were added in T-075 (2026-11-01, backend; client pending). Remaining limits: the rate-limit counters are in memory (reset on restart, per IP, no proxy support), the verified-email 409 on register still reveals that an address is registered, and the console mail transport (development only, refused in production) prints the link and token to the server console.
+- Login is rate limited per IP (10 per 15 minutes, T-075) but there is no per-account lockout.
 - CSRF protection relies on SameSite cookies, not tokens.
 - Local development runs over HTTP, so cookies are not `secure` there.
 - No automated dependency vulnerability scanning beyond running `npm audit` manually (in both `server/` and `client/`).

@@ -51,6 +51,8 @@ async function call(method, path, { body, raw, type, cookie } = {}) {
 const register = (body, cookie) => call('POST', '/api/auth/register', { body, cookie });
 const login = (body, cookie) => call('POST', '/api/auth/login', { body, cookie });
 const me = (cookie) => call('GET', '/api/auth/me', { cookie });
+const verifyInDb = (email) =>
+  pool.execute('UPDATE users SET email_verified_at = NOW(), verification_token_hash = NULL, verification_expires_at = NULL WHERE email = ?', [email]);
 const dbCount = async (sql, params) => (await pool.execute(sql, params))[0][0].n;
 const LEAKS = /node_modules|\bat\s+\S+\s+\(|Error:|stack|ER_|SELECT |INSERT /i;
 
@@ -95,13 +97,16 @@ test('AUTH-01 register a valid user (messy email is normalised)', async () => {
   const email = mk('a');
   const r = await register({ name: '  T030 Tester A ', email: `  ${email.toUpperCase()} `, password: PASSWORD });
   assert.equal(r.status, 201);
-  assert.deepEqual(Object.keys(r.json), ['user']);
-  assert.deepEqual(Object.keys(r.json.user).sort(), ['email', 'id', 'name']);
-  assert.equal(r.json.user.email, email); // trimmed and lower-cased
-  assert.equal(r.json.user.name, 'T030 Tester A');
+  assert.deepEqual(Object.keys(r.json), ['message']); // T-075: no user object, no session
   assert.ok(!/password|hash/i.test(r.text), 'response must not mention a password or hash');
-  assert.ok(r.cookie, 'register also logs the user in (session cookie set)');
-  A = { email, id: r.json.user.id, cookie: r.cookie };
+  assert.equal(r.cookie, null, 'register no longer logs the user in (T-075)');
+  const [rows] = await pool.execute('SELECT id, name, email FROM users WHERE email = ?', [email]);
+  assert.equal(rows.length, 1); // stored trimmed and lower-cased
+  assert.equal(rows[0].name, 'T030 Tester A');
+  await verifyInDb(email); // stands in for clicking the emailed link
+  const l = await login({ email, password: PASSWORD });
+  assert.equal(l.status, 200);
+  A = { email, id: rows[0].id, cookie: l.cookie };
   const m = await me(A.cookie);
   assert.equal(m.status, 200);
   assert.equal(m.json.user.id, A.id);
@@ -176,15 +181,12 @@ test('AUTH-05 login works, regenerates the session, and the old session id stops
   assert.equal(upper.json.user.id, A.id);
 });
 
-test('AUTH-05b register also regenerates the session', async () => {
+test('AUTH-05b register creates no session and leaves an existing session untouched (T-075)', async () => {
   const before = (await login({ email: A.email, password: PASSWORD })).cookie;
   const r = await register({ name: 'T030 Tester C', email: mk('c'), password: PASSWORD }, before);
   assert.equal(r.status, 201);
-  assert.ok(r.cookie && r.cookie !== before);
-  assert.equal((await me(before)).status, 401, 'pre-register session id is dead');
-  const m = await me(r.cookie);
-  assert.equal(m.status, 200);
-  assert.equal(m.json.user.id, r.json.user.id);
+  assert.equal(r.cookie, null, 'no session cookie from register');
+  assert.equal((await me(before)).status, 200, 'the existing session is untouched');
 });
 
 test('AUTH-06 login errors are generic and identical; edge inputs', async () => {
@@ -206,6 +208,7 @@ test('AUTH-06 login errors are generic and identical; edge inputs', async () => 
   const reg = await register({ name: 'T030 Tester B', email: mk('b'), password: LONG_PASSWORD });
   assert.equal(reg.status, 201);
   B = { email: mk('b') };
+  await verifyInDb(B.email);
   assert.equal((await login({ email: B.email, password: LONG_PASSWORD })).status, 200);
   const extended = await login({ email: B.email, password: `${LONG_PASSWORD}zzz` });
   assert.equal(extended.status, 401);

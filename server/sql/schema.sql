@@ -10,9 +10,15 @@ CREATE TABLE IF NOT EXISTS users (
   name          VARCHAR(100) NOT NULL,
   email         VARCHAR(255) NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
+  -- Email verification (T-075). NULL = not verified. Existing databases: migrations/001_email_verification.sql.
+  email_verified_at       DATETIME NULL,
+  verification_token_hash CHAR(64) NULL,   -- SHA-256 hex; the raw token is never stored
+  verification_expires_at DATETIME NULL,
+  verification_sent_at    DATETIME NULL,
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_users_email (email)
+  UNIQUE KEY uq_users_email (email),
+  UNIQUE KEY uq_users_verification_token (verification_token_hash)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS subjects (

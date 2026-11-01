@@ -1,6 +1,6 @@
 # API Specification
 
-Last updated: 2026-10-30 | Status: Proposed contract. Health, the four auth endpoints (T-030), the four subjects endpoints (T-040) and the seven tasks endpoints (T-050, uncommitted) are implemented and covered by scripted tests; there is nothing else in the contract. The contract itself is unchanged by the move to React; only two notes in section 1 (single origin, JSON 404 for unknown `/api` paths) were added.
+Last updated: 2026-10-30 | Status: Proposed contract. Health, the six auth endpoints (T-030, T-075), the four subjects endpoints (T-040) and the seven tasks endpoints (T-050, uncommitted) are implemented and covered by scripted tests; there is nothing else in the contract. The contract itself is unchanged by the move to React; only two notes in section 1 (single origin, JSON 404 for unknown `/api` paths) were added.
 
 ## 1. Conventions
 - Base path `/api`; JSON request and response bodies (`Content-Type: application/json`). Non-JSON bodies are rejected with 415; a body-less request (including `Content-Length: 0`) is fine, and a body over 10 KB gets 413.
@@ -50,10 +50,14 @@ Last updated: 2026-10-30 | Status: Proposed contract. Health, the four auth endp
 ### Auth
 | Method + path | Body | Success | Failures |
 |---|---|---|---|
-| `POST /api/auth/register` | `{name, email, password}` | `201 { user }`; also logs the user in | 400, 409 `EMAIL_TAKEN` |
-| `POST /api/auth/login` | `{email, password}` | `200 { user }`; session id regenerated | 400 only when email or password is missing or not text; every other failure (unknown email, wrong password, password over 72 bytes) is the generic 401 "Invalid email or password." |
+| `POST /api/auth/register` | `{name, email, password}` | `201 { message }`; creates an UNVERIFIED account and emails a verification link; **no session** (T-075). Registering a still-unverified email replaces its pending name, password and token (not within 60 s of the last email) and answers the same 201 | 400, 409 `EMAIL_TAKEN` (verified email), 429 `RATE_LIMITED` |
+| `POST /api/auth/login` | `{email, password}` | `200 { user }`; session id regenerated | 400 only when email or password is missing or not text; every other failure (unknown email, wrong password, password over 72 bytes) is the generic 401 "Invalid email or password." After a **correct** password, an unverified account gets `403 EMAIL_NOT_VERIFIED` (T-075); 429 `RATE_LIMITED` |
 | `POST /api/auth/logout` | none | `204` | none (idempotent) |
 | `GET /api/auth/me` | none | `200 { user }` | 401 |
+| `POST /api/auth/verify-email` | `{token}` | `200 { message }`; marks the email verified; **no auto-login** (T-075) | `400 TOKEN_INVALID_OR_EXPIRED` for every failure (malformed, unknown, expired, already used); 429 |
+| `POST /api/auth/resend-verification` | `{email}` | always `202 { message }`, identical for unknown, verified, in-cooldown and sent (T-075); a new token is issued only for an unverified account more than 60 s after the last email | 400 `VALIDATION_ERROR` (missing or malformed email); 429 |
+
+Email verification (T-075): the token is 256-bit random (base64url, 43 characters), single-use, valid 30 minutes; only its SHA-256 hash is stored. The link is `APP_BASE_URL/verify-email?token=...` (client page, explicit Confirm button). `429 RATE_LIMITED` carries a `Retry-After` header. Per-IP limits: register 10/hour, login 10/15 min, verify-email 10/15 min, resend 5/15 min plus 3/15 min per email (in memory, reset on restart).
 
 ### Subjects (auth required)
 | Method + path | Body | Success | Failures |
