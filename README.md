@@ -2,7 +2,7 @@
 
 A responsive personal task manager for students: register, log in, and track academic tasks by subject, deadline, and priority.
 
-> **Status (2026-10-29): Planning phase. No application code exists yet.** Phase 0 documentation is complete and verified; Phase 1 (server and database setup) is next. See [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md) for the current state and [docs/planning.md](docs/planning.md) for the roadmap and schedule.
+> **Status (2026-11-02): In development.** The backend (auth with email verification, subjects, tasks) and the client auth flow (register, check email, verify, login, protected routes) are implemented. Email verification (T-075) is done and passed a manual end-to-end test with real Brevo mail. The dashboard and task UI (T-080), responsive polish (T-090), the full test run (T-100) and the clean-clone setup check (T-110) are still to do; T-030 stays open until its manual DevTools cookie check. See [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md) for the current state and [docs/planning.md](docs/planning.md) for the roadmap and schedule.
 
 B.Tech Web Development minor project.
 
@@ -62,6 +62,12 @@ In development the Vite server forwards `/api` requests to Express, so the brows
 | `DB_PASSWORD` | yes | *(your value)* | Database password |
 | `SESSION_SECRET` | yes | *(random, 32+ chars)* | Signs session cookies |
 | `SESSION_MAX_AGE_HOURS` | no | `8` | Session lifetime |
+| `MAIL_TRANSPORT` | email verification | `console` or `brevo` | `console` prints the verification link to the server console (development only, refused in production); `brevo` sends real email |
+| `APP_BASE_URL` | email verification | `http://localhost:5173` | Client base URL used in the emailed link |
+| `MAIL_FROM_EMAIL`, `MAIL_FROM_NAME`, `BREVO_API_KEY` | only for `brevo` | *(your values)* | Sender verified in Brevo and the Brevo API key |
+| `RATE_LIMIT_DISABLED` | no | *(empty)* | Test servers only (ignored in production): `true` switches rate limiting off |
+
+**Brevo (real email):** the public IP of the machine running the server must be on Brevo's authorised IP list, otherwise the Brevo API rejects the request; if your IP changes, authorise the new one. Brevo Transactional Logs show a sent email only after a delay.
 
 The server must refuse to start if a required variable is missing. Real values live only in `server/.env`, which is git-ignored. The client needs no environment variables, and nothing secret may ever be put in a `VITE_` variable because those end up in the browser bundle.
 
