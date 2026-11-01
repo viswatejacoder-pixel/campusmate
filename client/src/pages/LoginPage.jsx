@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [formError, setFormError] = useState('');
+  const [unverified, setUnverified] = useState(false); // T-075: correct password but email not verified yet
   const [submitting, setSubmitting] = useState(false);
 
   // Already logged in (or just logged in): the redirect is the success behaviour.
@@ -26,6 +27,7 @@ export default function LoginPage() {
     event.preventDefault();
     if (submitting) return;
     setFormError('');
+    setUnverified(false);
     const fields = validate(email, password);
     setFieldErrors(fields);
     if (Object.keys(fields).length > 0) return;
@@ -35,6 +37,10 @@ export default function LoginPage() {
       await login(email.trim(), password);
     } catch (err) {
       if (err && err.fields) setFieldErrors(err.fields);
+      else if (err && err.code === 'EMAIL_NOT_VERIFIED') {
+        setUnverified(true);
+        setFormError('Please verify your email address before logging in.');
+      } else if (err && err.code === 'RATE_LIMITED') setFormError('Too many login attempts. Please wait a few minutes and try again.');
       else setFormError(err && err.message ? err.message : 'Something went wrong. Please try again.');
       setSubmitting(false);
     }
@@ -46,6 +52,14 @@ export default function LoginPage() {
       {formError && (
         <p role="alert" className="form-error">
           {formError}
+          {unverified && (
+            <>
+              {' '}
+              <Link to="/check-email" state={{ email: email.trim().toLowerCase() }}>
+                Resend the verification email
+              </Link>
+            </>
+          )}
         </p>
       )}
       <form onSubmit={handleSubmit} noValidate>

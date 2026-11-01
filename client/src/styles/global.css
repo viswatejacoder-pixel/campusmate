@@ -17,6 +17,11 @@ button { min-height: 2.75rem; padding: 0.5rem 1rem; font: inherit; font-weight: 
 .auth-card button[type="submit"] { width: 100%; }
 button:disabled { opacity: 0.65; cursor: not-allowed; }
 a { color: #1d4ed8; }
+.button-secondary { width: 100%; color: #1d4ed8; background: #fff; border: 2px solid #1d4ed8; }
+.button-link { display: inline-block; padding: 0.6rem 1rem; color: #fff; background: #1d4ed8; border-radius: 6px; font-weight: 600; text-decoration: none; }
+.form-success { margin: 0 0 1rem; padding: 0.5rem 0.75rem; color: #14532d; border: 1px solid #14532d; border-radius: 6px; background: #ecf8ef; }
+.muted { color: #4b5563; font-size: 0.95rem; }
+.break-anywhere { overflow-wrap: anywhere; }
 
 :focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import FormField from '../components/FormField.jsx';
 
@@ -29,6 +29,7 @@ function validate({ name, email, password }) {
 
 export default function RegisterPage() {
   const { status, register } = useAuth();
+  const navigate = useNavigate();
   const [values, setValues] = useState({ name: '', email: '', password: '' });
   const [fieldErrors, setFieldErrors] = useState({});
   const [formError, setFormError] = useState('');
@@ -49,6 +50,8 @@ export default function RegisterPage() {
     setSubmitting(true);
     try {
       await register(values.name.trim(), values.email.trim(), values.password);
+      // No session exists yet (T-075): the account must be verified first. Only the email is passed on, never the password.
+      navigate('/check-email', { replace: true, state: { email: values.email.trim().toLowerCase(), sent: true } });
     } catch (err) {
       if (err && err.fields) setFieldErrors(err.fields);
       else if (err && err.code === 'EMAIL_TAKEN') setFieldErrors({ email: err.message });

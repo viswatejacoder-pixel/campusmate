@@ -29,11 +29,8 @@ export function AuthProvider({ children }) {
     return user;
   }, []);
 
-  const register = useCallback(async (name, email, password) => {
-    const user = await registerRequest(name, email, password);
-    setState({ user, status: 'authenticated' });
-    return user;
-  }, []);
+  // T-075: registering creates an unverified account and NO session, so the auth state is left unchanged.
+  const register = useCallback((name, email, password) => registerRequest(name, email, password), []);
 
   // Local state is cleared even if the request fails; logout is idempotent on the server and the session expires anyway.
   const logout = useCallback(async () => {

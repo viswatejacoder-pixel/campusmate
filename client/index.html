@@ -3,6 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- T-075: the verification link carries a token in its query string; never send it on as a Referer header. -->
+    <meta name="referrer" content="no-referrer" />
     <title>CampusMate</title>
   </head>
   <body>
