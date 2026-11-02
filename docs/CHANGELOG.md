@@ -2,6 +2,9 @@
 
 All notable changes to the project. Newest first. Only things that actually happened are listed.
 
+## 2026-11-03
+- T-080 (dashboard UI) Done, not yet committed: new `SummaryCards`, `TaskList`, `TaskItem`, `TaskForm`, `FilterBar`, `SubjectManager` and `ConfirmDialog` components, `api/subjects.js`, `api/tasks.js`, `utils/`, `styles/dashboard.css`, 10 new client test files; modified `DashboardPage.jsx` and `FormField.jsx`. Client tests 140 of 140, build and `git diff --check` pass; manual browser acceptance passed (author-reported), including a script tag in a task title shown as text and user isolation. No server, dependency or database change. Not run: 360 px responsive checks (T-090) and PROD-02. TASKS, PROJECT_STATUS, TESTING and README updated.
+
 ## 2026-11-02
 - T-075 M4 (real email delivery) manual end-to-end passed, T-075 Done (docs only, author-reported): Brevo API authentication works once the public IP of the machine running the server is authorised in Brevo; the real verification email was delivered, verification succeeded, and login and dashboard session persistence passed. Brevo Transactional Logs showed the email only after a delay. Not run: the manual rate-limit test, and expired-link and resend checks with a real email. TASKS.md (T-075 Done), TESTING.md (AUTH-16 Partial), PROJECT_STATUS.md and README.md (email environment variables, Brevo note) updated. No application code, SQL, `.env` or database change.
 

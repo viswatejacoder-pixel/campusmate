@@ -2,7 +2,7 @@
 
 A responsive personal task manager for students: register, log in, and track academic tasks by subject, deadline, and priority.
 
-> **Status (2026-11-02): In development.** The backend (auth with email verification, subjects, tasks) and the client auth flow (register, check email, verify, login, protected routes) are implemented. Email verification (T-075) is done and passed a manual end-to-end test with real Brevo mail. The dashboard and task UI (T-080), responsive polish (T-090), the full test run (T-100) and the clean-clone setup check (T-110) are still to do; T-030 stays open until its manual DevTools cookie check. See [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md) for the current state and [docs/planning.md](docs/planning.md) for the roadmap and schedule.
+> **Status (2026-11-03): In development.** The backend (auth with email verification, subjects, tasks) and the client auth flow (register, check email, verify, login, protected routes) are implemented. Email verification (T-075) is done and passed a manual end-to-end test with real Brevo mail. The dashboard (T-080: summary, task list with create, edit, complete and delete, subject management, filters) is implemented and passed automated and manual browser acceptance tests. Responsive polish (T-090), the full test run (T-100) and the clean-clone setup check (T-110) are still to do; T-030 stays open until its manual DevTools cookie check. See [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md) for the current state and [docs/planning.md](docs/planning.md) for the roadmap and schedule.
 
 B.Tech Web Development minor project.
 

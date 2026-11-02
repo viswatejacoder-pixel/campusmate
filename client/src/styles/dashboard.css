@@ -1,0 +1,59 @@
+/* Dashboard layout (T-080 M2). Functional and responsive; visual polish is T-090. */
+.dashboard section { margin-top: 1.5rem; }
+.dashboard h2 { margin: 0 0 0.75rem; font-size: 1.15rem; }
+.form-error p { margin: 0 0 0.5rem; }
+
+.summary-cards, .task-list, .subject-list { list-style: none; margin: 0; padding: 0; }
+.summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: 0.75rem; margin-bottom: 0.5rem; }
+.summary-card { display: flex; flex-direction: column; padding: 0.75rem 1rem; border: 1px solid #d0d4da; border-radius: 6px; background: #f9fafb; }
+.summary-count { font-size: 1.75rem; font-weight: 700; line-height: 1.2; }
+.summary-label { color: #4b5563; font-size: 0.95rem; }
+
+.subject-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.subject-list li { padding: 0.25rem 0.75rem; border: 1px solid #d0d4da; border-radius: 999px; background: #f9fafb; }
+.empty-state { margin: 0; padding: 1rem; border: 1px dashed #6b7280; border-radius: 6px; background: #f9fafb; }
+
+.task-list { display: grid; gap: 0.75rem; }
+.task-item { padding: 0.75rem 1rem; border: 1px solid #d0d4da; border-radius: 6px; background: #fff; }
+.task-title { margin: 0 0 0.5rem; font-size: 1.05rem; }
+.task-item--completed .task-title { color: #4b5563; }
+.task-meta { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; margin: 0 0 0.5rem; }
+.task-meta div { display: flex; gap: 0.35rem; }
+.task-meta dt { font-weight: 600; }
+.task-meta dd { margin: 0; overflow-wrap: anywhere; }
+.task-toggle { color: #1d4ed8; background: #fff; border: 2px solid #1d4ed8; }
+.task-details { margin-top: 0.75rem; }
+.task-description { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+
+/* Task actions, form and delete dialog (T-080 M3). Basic only; polish is T-090. */
+.section-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.75rem; }
+.section-header h2 { margin: 0; }
+.task-actions, .form-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+.button-danger { color: #fff; background: #b00020; }
+
+.task-form { margin-bottom: 1rem; padding: 1rem; border: 1px solid #6b7280; border-radius: 6px; background: #f9fafb; }
+.task-form h3 { margin: 0 0 0.75rem; font-size: 1.05rem; }
+.field select, .field textarea { width: 100%; min-height: 2.75rem; padding: 0.5rem 0.75rem; font: inherit; border: 1px solid #6b7280; border-radius: 6px; background: #fff; }
+.field textarea { resize: vertical; }
+.field select[aria-invalid="true"], .field textarea[aria-invalid="true"] { border: 2px solid #b00020; }
+
+.confirm-dialog { width: min(28rem, calc(100vw - 2rem)); padding: 1.25rem; border: 1px solid #6b7280; border-radius: 8px; }
+.confirm-dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
+.confirm-dialog h2 { margin: 0 0 0.5rem; }
+
+/* Subject manager (T-080 M4). Basic only; polish is T-090. */
+.subject-form { margin-bottom: 0.75rem; }
+.subject-form .form-actions, .subject-edit .form-actions { margin-top: 0.5rem; }
+.subject-manager-list { display: grid; gap: 0.5rem; }
+.subject-manager-list .subject-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; border-radius: 6px; }
+.subject-manager-list .subject-edit { width: 100%; }
+.subject-manager-list .task-actions { margin-top: 0; }
+
+/* Task filters and indicators (T-080 M5). Basic only; polish is T-090. */
+.filter-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 0 0.75rem; align-items: end; margin-bottom: 1rem; padding: 1rem 1rem 0; border: 1px solid #d0d4da; border-radius: 6px; background: #f9fafb; }
+.filter-bar .form-actions { margin: 0 0 1rem; }
+.task-flags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 0.5rem; }
+.task-flag { padding: 0.1rem 0.6rem; border: 1px solid; border-radius: 999px; font-size: 0.875rem; font-weight: 600; }
+.task-flag--overdue { color: #8a0019; background: #fdecef; border-color: #b00020; }
+.task-flag--due-soon { color: #7a4a00; background: #fff4e0; border-color: #b36b00; }
