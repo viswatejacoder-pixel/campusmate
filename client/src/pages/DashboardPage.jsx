@@ -4,10 +4,17 @@ import { ApiError } from '../api/client.js';
 import { createSubject, deleteSubject, listSubjects, renameSubject } from '../api/subjects.js';
 import { createTask, deleteTask, getTaskSummary, listTasks, setTaskCompleted, updateTask } from '../api/tasks.js';
 import { createLatestRequestGuard } from '../utils/latestRequest.js';
+import { todayString } from '../utils/dates.js';
+import { validateTaskFilters } from '../utils/validation.js';
 import { runMutation } from '../utils/runMutation.js';
 import { actionErrorMessage } from '../utils/taskForm.js';
 import { EMPTY_FILTERS, createFilterScheduler, hasActiveFilters, totalTaskCount } from '../utils/taskFilters.js';
+import { previewTasks } from '../utils/taskPreview.js';
 import SummaryCards from '../components/SummaryCards.jsx';
+import UpcomingDeadlines from '../components/UpcomingDeadlines.jsx';
+import ProgressPanel from '../components/ProgressPanel.jsx';
+import Sidebar from '../components/Sidebar.jsx';
+import TopBar from '../components/TopBar.jsx';
 import FilterBar from '../components/FilterBar.jsx';
 import TaskList from '../components/TaskList.jsx';
 import SubjectManager from '../components/SubjectManager.jsx';
@@ -15,6 +22,8 @@ import TaskForm from '../components/TaskForm.jsx';
 import ConfirmDialog from '../components/ConfirmDialog.jsx';
 import '../styles/dashboard.css';
 
+const UPCOMING_LIMIT = 5;
+const DEADLINES_LOADING = { status: 'loading', tasks: [] };
 const LOADING = { status: 'loading', subjects: [], tasks: [], summary: null, error: null };
 
 // Show the API's own message for expected failures (network down, server error); never an unexpected error's internals.
@@ -31,6 +40,7 @@ export function DashboardContent({
   deleteTarget = null, deleteError = '', onConfirmDelete, onCancelDelete,
   onCreateSubject, onRenameSubject, onDeleteSubject,
   filters = null, onFilterChange, onResetFilters, listLoading = false, listError = null, onRetryList,
+  deadlines = null, onRetryDeadlines, expanded = false, onToggleExpanded,
 }) {
   if (status === 'loading') return <p role="status">Loading your dashboard...</p>;
 
@@ -50,6 +60,14 @@ export function DashboardContent({
   // The summary counts every task whatever the filters, so it tells "no tasks yet" apart from "tasks exist, none match".
   const noMatch = tasks.length === 0 && totalTaskCount(summary) > 0;
   const showFilters = filters && onFilterChange && onResetFilters && (totalTaskCount(summary) > 0 || hasActiveFilters(filters));
+  // Task preview (T-090 v3): only when the page wires the toggle. Searching or filtering always shows the full (filtered) list, so a
+  // match can never be hidden; the preview shows at most five pending tasks, overdue first. `expanded` is "View all tasks".
+  const filtering = hasActiveFilters(filters);
+  const previewing = Boolean(onToggleExpanded) && !expanded && !filtering;
+  const shownTasks = previewing ? previewTasks(tasks, todayString()) : tasks;
+  const canToggle = Boolean(onToggleExpanded) && !filtering && (expanded || tasks.length > shownTasks.length);
+  const showFilterBar = showFilters && !previewing;
+  const showTasks = !noSubjects || tasks.length > 0;
   return (
     <>
       {refreshError && (
@@ -65,68 +83,84 @@ export function DashboardContent({
 
       <SummaryCards summary={summary} />
 
-      <section aria-labelledby="subjects-heading">
-        <h2 id="subjects-heading" tabIndex={-1}>Subjects</h2>
-        {onCreateSubject && onRenameSubject && onDeleteSubject ? (
-          <SubjectManager subjects={subjects} locked={locked || deleteTarget !== null} onCreate={onCreateSubject} onRename={onRenameSubject} onDelete={onDeleteSubject} />
-        ) : noSubjects ? (
-          <p className="empty-state">You have no subjects yet. Create a subject first (for example, Data Structures), then you can add tasks to it.</p>
-        ) : (
-          <ul className="subject-list">
-            {subjects.map((subject) => (
-              <li key={subject.id} className="break-anywhere">
-                {subject.name}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      {(!noSubjects || tasks.length > 0) && (
-        <section aria-labelledby="tasks-heading">
-          <div className="section-header">
-            <h2 id="tasks-heading" tabIndex={-1}>Tasks</h2>
-            {onNewTask && !noSubjects && (
-              <button type="button" onClick={onNewTask} disabled={locked}>
-                Add task
-              </button>
-            )}
-          </div>
-          {actionError && (
-            <p role="alert" className="form-error">
-              {actionError}
-            </p>
-          )}
-          {form && onSaveTask && (
-            <TaskForm key={form.task ? form.task.id : 'new'} task={form.task} subjects={subjects} onSubmit={onSaveTask} onCancel={onCancelForm} />
-          )}
-          {showFilters && <FilterBar filters={filters} subjects={subjects} onChange={onFilterChange} onReset={onResetFilters} />}
-          {listError && (
-            <div className="form-error" role="alert">
-              <p>{`The task list could not be updated and may not match your filters. ${actionErrorMessage(listError, '')}`.trim()}</p>
-              {onRetryList && (
-                <button type="button" onClick={onRetryList}>
-                  Try again
+      <div className={showTasks ? 'dash-grid' : 'dash-grid dash-grid--solo'}>
+        {showTasks && (
+          <section className="panel" aria-labelledby="tasks-heading">
+            <div className="section-header">
+              <h2 id="tasks-heading" tabIndex={-1}>Tasks</h2>
+              {onNewTask && !noSubjects && (
+                <button type="button" onClick={onNewTask} disabled={locked}>
+                  Add task
                 </button>
               )}
             </div>
-          )}
-          {listLoading && (
-            <p role="status" className="muted">
-              Updating tasks...
-            </p>
-          )}
-          <TaskList
-            tasks={tasks}
-            noMatch={noMatch}
-            locked={locked}
-            pendingTaskId={pendingTaskId}
-            onToggle={onToggleTask}
-            onEdit={onEditTask}
-            onDelete={onDeleteTask}
-          />
-        </section>
-      )}
+            {actionError && (
+              <p role="alert" className="form-error">
+                {actionError}
+              </p>
+            )}
+            {form && onSaveTask && (
+              <TaskForm key={form.task ? form.task.id : 'new'} task={form.task} subjects={subjects} onSubmit={onSaveTask} onCancel={onCancelForm} />
+            )}
+            {showFilterBar && <FilterBar filters={filters} subjects={subjects} onChange={onFilterChange} onReset={onResetFilters} />}
+            {listError && (
+              <div className="form-error" role="alert">
+                <p>{`The task list could not be updated and may not match your filters. ${actionErrorMessage(listError, '')}`.trim()}</p>
+                {onRetryList && (
+                  <button type="button" onClick={onRetryList}>
+                    Try again
+                  </button>
+                )}
+              </div>
+            )}
+            {listLoading && (
+              <p role="status" className="muted">
+                Updating tasks...
+              </p>
+            )}
+            {previewing && shownTasks.length === 0 && tasks.length > 0 ? (
+              <p className="empty-state">No pending tasks. Everything is completed.</p>
+            ) : (
+              <TaskList
+                tasks={shownTasks}
+                noMatch={noMatch}
+                locked={locked}
+                pendingTaskId={pendingTaskId}
+                onToggle={onToggleTask}
+                onEdit={onEditTask}
+                onDelete={onDeleteTask}
+              />
+            )}
+            {canToggle && (
+              <div className="task-more">
+                <button type="button" className="button-secondary" aria-expanded={expanded} onClick={onToggleExpanded}>
+                  {expanded ? 'Show fewer tasks' : `View all tasks (${tasks.length})`}
+                </button>
+              </div>
+            )}
+          </section>
+        )}
+        <div className="dash-side">
+          {deadlines && <UpcomingDeadlines deadlines={deadlines} onRetry={onRetryDeadlines} />}
+          <ProgressPanel summary={summary} />
+          <section className="panel" aria-labelledby="subjects-heading">
+            <h2 id="subjects-heading" tabIndex={-1}>Subjects</h2>
+            {onCreateSubject && onRenameSubject && onDeleteSubject ? (
+              <SubjectManager subjects={subjects} locked={locked || deleteTarget !== null} onCreate={onCreateSubject} onRename={onRenameSubject} onDelete={onDeleteSubject} />
+            ) : noSubjects ? (
+              <p className="empty-state">You have no subjects yet. Create a subject first (for example, Data Structures), then you can add tasks to it.</p>
+            ) : (
+              <ul className="subject-list">
+                {subjects.map((subject) => (
+                  <li key={subject.id} className="break-anywhere">
+                    {subject.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+      </div>
 
       {deleteTarget && (
         <ConfirmDialog
@@ -154,12 +188,15 @@ export default function DashboardPage() {
   const [draft, setDraft] = useState(EMPTY_FILTERS); // the filter bar's controls, as typed
   const [listLoading, setListLoading] = useState(false);
   const [listError, setListError] = useState(null);
+  const [deadlines, setDeadlines] = useState(DEADLINES_LOADING);
+  const [deadlineGuard] = useState(createLatestRequestGuard); // tickets for the Upcoming deadlines request only
   const [refreshError, setRefreshError] = useState(null);
   const [actionError, setActionError] = useState('');
   const [form, setForm] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteError, setDeleteError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [expanded, setExpanded] = useState(false); // "View all tasks" (T-090 v3): in place, no route
   const [pendingTaskId, setPendingTaskId] = useState(null);
   const busyRef = useRef(false); // synchronous twin of `busy`: a second click in the same tick cannot start a second request
   const mountedRef = useRef(true);
@@ -185,6 +222,17 @@ export default function DashboardPage() {
     }
   }, [listGuard]);
 
+  // Upcoming deadlines is its own request (pending tasks due today or later, soonest first, shown five at a time), independent of the
+  // filters and of load()/refresh() results: a failure only puts a notice in that panel. Never rejects. Newest request wins.
+  const fetchDeadlines = useCallback(async () => {
+    const ticket = deadlineGuard.start();
+    try {
+      const tasks = await listTasks({ status: 'pending', dueFrom: todayString(), sort: 'dueDate', order: 'asc' });
+      if (deadlineGuard.isCurrent(ticket)) setDeadlines({ status: 'ready', tasks: tasks.slice(0, UPCOMING_LIMIT) });
+    } catch {
+      if (deadlineGuard.isCurrent(ticket)) setDeadlines({ status: 'error', tasks: [] });
+    }
+  }, [deadlineGuard]);
   // Turns draft changes into requests: search text waits for a pause in typing, other controls apply at once, an invalid or
   // unchanged draft sends nothing (utils/taskFilters.js). load() and refresh() read scheduler.applied, the filters last applied.
   const [scheduler] = useState(() => createFilterScheduler({ apply: fetchTasks }));
@@ -198,6 +246,7 @@ export default function DashboardPage() {
     setRefreshError(null);
     setListError(null);
     setListLoading(false);
+    fetchDeadlines();
     try {
       const [subjects, tasks, summary] = await Promise.all([listSubjects(), listTasks(scheduler.applied), getTaskSummary()]);
       if (!guard.isCurrent(ticket)) return;
@@ -206,7 +255,7 @@ export default function DashboardPage() {
       if (!guard.isCurrent(ticket)) return;
       setData({ ...LOADING, status: 'error', error });
     }
-  }, [guard, listGuard, scheduler]);
+  }, [guard, listGuard, scheduler, fetchDeadlines]);
 
   // After a change: fetch subjects, tasks and the summary again (a subject change can affect all three). Same ticket rule as load().
   // The data on screen is replaced only when all answers arrive; if the refresh fails the old data stays and a notice is shown. Never rejects.
@@ -215,6 +264,7 @@ export default function DashboardPage() {
   const refresh = useCallback(async () => {
     const ticket = guard.start();
     const listTicket = listGuard.start();
+    fetchDeadlines();
     try {
       const [subjects, tasks, summary] = await Promise.all([listSubjects(), listTasks(scheduler.applied), getTaskSummary()]);
       if (!guard.isCurrent(ticket)) return;
@@ -230,7 +280,7 @@ export default function DashboardPage() {
       setRefreshError(error);
       if (listGuard.isCurrent(listTicket)) setListLoading(false);
     }
-  }, [guard, listGuard, scheduler]);
+  }, [guard, listGuard, scheduler, fetchDeadlines]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -239,9 +289,10 @@ export default function DashboardPage() {
       mountedRef.current = false;
       guard.invalidate(); // unmounted: every request still in flight becomes stale
       listGuard.invalidate();
+      deadlineGuard.invalidate();
       scheduler.dispose(); // and a search waiting for its pause never fires
     };
-  }, [load, guard, listGuard, scheduler]);
+  }, [load, guard, listGuard, deadlineGuard, scheduler]);
 
   // Every draft change goes to the scheduler (the first run, with untouched controls, sends nothing).
   useEffect(() => {
@@ -365,46 +416,58 @@ export default function DashboardPage() {
     await logout();
   }
 
+  const searchAvailable = data.status === 'ready' && (totalTaskCount(data.summary) > 0 || hasActiveFilters(draft));
   return (
-    <main className="page dashboard">
-      <header className="page-header">
-        <h1>Dashboard</h1>
-        <div className="page-header-user">
-          <span>Hello, {user.name}</span>
-          <button type="button" onClick={handleLogout} disabled={loggingOut}>
-            {loggingOut ? 'Logging out...' : 'Log out'}
-          </button>
-        </div>
-      </header>
-      <DashboardContent
-        {...data}
-        onRetry={load}
-        refreshError={refreshError}
-        onRefresh={refresh}
-        actionError={actionError}
-        busy={busy}
-        pendingTaskId={pendingTaskId}
-        form={form}
-        onNewTask={() => openForm(null)}
-        onEditTask={openForm}
-        onToggleTask={handleToggleTask}
-        onDeleteTask={openDeleteDialog}
-        onSaveTask={handleSaveTask}
-        onCancelForm={closeForm}
-        deleteTarget={deleteTarget}
-        deleteError={deleteError}
-        onConfirmDelete={handleConfirmDelete}
-        onCancelDelete={closeDeleteDialog}
-        onCreateSubject={handleCreateSubject}
-        onRenameSubject={handleRenameSubject}
-        onDeleteSubject={handleDeleteSubject}
-        filters={draft}
-        onFilterChange={handleFilterChange}
-        onResetFilters={handleResetFilters}
-        listLoading={listLoading}
-        listError={listError}
-        onRetryList={retryList}
-      />
-    </main>
+    <div className="app-shell">
+      <Sidebar onLogout={handleLogout} loggingOut={loggingOut} />
+      <div className="app-main">
+        <TopBar
+          user={user}
+          search={draft.q}
+          onSearchChange={(value) => handleFilterChange('q', value)}
+          searchDisabled={!searchAvailable}
+          error={validateTaskFilters(draft).fields.q}
+        />
+        <main className="dashboard" id="main-content" tabIndex={-1}>
+          <div className="dashboard-heading">
+            <h1>Dashboard</h1>
+            <p className="muted">Plan, prioritize, and keep track of your tasks.</p>
+          </div>
+          <DashboardContent
+            {...data}
+            onRetry={load}
+            refreshError={refreshError}
+            onRefresh={refresh}
+            actionError={actionError}
+            busy={busy}
+            pendingTaskId={pendingTaskId}
+            form={form}
+            onNewTask={() => openForm(null)}
+            onEditTask={openForm}
+            onToggleTask={handleToggleTask}
+            onDeleteTask={openDeleteDialog}
+            onSaveTask={handleSaveTask}
+            onCancelForm={closeForm}
+            deleteTarget={deleteTarget}
+            deleteError={deleteError}
+            onConfirmDelete={handleConfirmDelete}
+            onCancelDelete={closeDeleteDialog}
+            onCreateSubject={handleCreateSubject}
+            onRenameSubject={handleRenameSubject}
+            onDeleteSubject={handleDeleteSubject}
+            filters={draft}
+            expanded={expanded}
+            onToggleExpanded={() => setExpanded((value) => !value)}
+            onFilterChange={handleFilterChange}
+            onResetFilters={handleResetFilters}
+            listLoading={listLoading}
+            listError={listError}
+            onRetryList={retryList}
+            deadlines={deadlines}
+            onRetryDeadlines={fetchDeadlines}
+          />
+        </main>
+      </div>
+    </div>
   );
 }

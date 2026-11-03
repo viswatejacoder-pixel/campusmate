@@ -1,29 +1,29 @@
 *, *::before, *::after { box-sizing: border-box; }
-body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.5; color: #1a1a1a; background: #f5f6f8; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.5; color: var(--color-text); background: var(--color-bg); }
 #root { padding: 1rem; }
 
-.auth-card, .page { max-width: 26rem; margin: 2rem auto; background: #fff; border: 1px solid #d0d4da; border-radius: 8px; padding: 1.5rem; }
+.auth-card, .page { max-width: 26rem; margin: 2rem auto; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 1.5rem; }
 .page { max-width: 60rem; }
 h1 { margin-top: 0; font-size: 1.5rem; }
 
 .field { margin-bottom: 1rem; }
 label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
-input { width: 100%; min-height: 2.75rem; padding: 0.5rem 0.75rem; font: inherit; border: 1px solid #6b7280; border-radius: 6px; background: #fff; }
-input[aria-invalid="true"] { border: 2px solid #b00020; }
-.field-error, .form-error { color: #b00020; font-size: 0.95rem; margin: 0.25rem 0 0; }
-.form-error { margin: 0 0 1rem; padding: 0.5rem 0.75rem; border: 1px solid #b00020; border-radius: 6px; background: #fdecee; }
+input { width: 100%; min-width: 0; max-width: 100%; min-height: 2.75rem; padding: 0.5rem 0.75rem; font: inherit; border: 1px solid var(--color-border-strong); border-radius: var(--radius-sm); background: var(--color-surface); }
+input[aria-invalid="true"] { border: 2px solid var(--color-danger); }
+.field-error, .form-error { color: var(--color-danger); font-size: 0.95rem; margin: 0.25rem 0 0; }
+.form-error { margin: 0 0 1rem; padding: 0.5rem 0.75rem; border: 1px solid var(--color-danger); border-radius: var(--radius-sm); background: var(--color-danger-bg); }
 
-button { min-height: 2.75rem; padding: 0.5rem 1rem; font: inherit; font-weight: 600; color: #fff; background: #1d4ed8; border: 0; border-radius: 6px; cursor: pointer; }
+button { min-height: 2.75rem; padding: 0.5rem 1rem; font: inherit; font-weight: 600; color: var(--color-on-primary); background: var(--color-primary); border: 0; border-radius: var(--radius-sm); cursor: pointer; }
 .auth-card button[type="submit"] { width: 100%; }
 button:disabled { opacity: 0.65; cursor: not-allowed; }
-a { color: #1d4ed8; }
-.button-secondary { width: 100%; color: #1d4ed8; background: #fff; border: 2px solid #1d4ed8; }
-.button-link { display: inline-block; padding: 0.6rem 1rem; color: #fff; background: #1d4ed8; border-radius: 6px; font-weight: 600; text-decoration: none; }
-.form-success { margin: 0 0 1rem; padding: 0.5rem 0.75rem; color: #14532d; border: 1px solid #14532d; border-radius: 6px; background: #ecf8ef; }
-.muted { color: #4b5563; font-size: 0.95rem; }
+a { color: var(--color-primary); }
+.button-secondary { width: 100%; color: var(--color-primary); background: var(--color-surface); border: 2px solid var(--color-primary); }
+.button-link { display: inline-block; padding: 0.6rem 1rem; color: var(--color-on-primary); background: var(--color-primary); border-radius: var(--radius-sm); font-weight: 600; text-decoration: none; }
+.form-success { margin: 0 0 1rem; padding: 0.5rem 0.75rem; color: var(--color-success); border: 1px solid var(--color-success); border-radius: var(--radius-sm); background: var(--color-success-bg); }
+.muted { color: var(--color-text-muted); font-size: 0.95rem; }
 .break-anywhere { overflow-wrap: anywhere; }
 
-:focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }
+:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; } /* T-090: 3:1 or better against the white and grey surfaces (the amber ring was about 2:1) */
 
 .page-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; }
 .page-header h1 { margin: 0; }
@@ -33,3 +33,44 @@ a { color: #1d4ed8; }
   #root { padding: 0.5rem; }
   .auth-card, .page { margin: 0.5rem auto; padding: 1rem; }
 }
+
+
+/* T-090: polish. Shared states, header and breakpoints; page-specific rules are in dashboard.css. */
+body { -webkit-text-size-adjust: 100%; }
+.auth-card, .page { box-shadow: var(--shadow-sm); }
+.auth-card h1 { margin-bottom: 1rem; }
+h1 { line-height: 1.25; }
+.page-header { padding-bottom: 0.75rem; border-bottom: 1px solid var(--color-divider); }
+.page-header-user span { min-width: 0; overflow-wrap: anywhere; }
+
+/* Hover and pressed states. :not(:disabled) keeps disabled buttons still; the class selectors win over the plain button rule. */
+button:not(:disabled):hover, .button-link:hover { background: var(--color-primary-hover); }
+.button-secondary:not(:disabled):hover, .task-toggle:not(:disabled):hover { background: var(--color-primary-tint); }
+.button-danger:not(:disabled):hover { background: var(--color-danger-dark); }
+button:not(:disabled):active { transform: translateY(1px); }
+@media (prefers-reduced-motion: no-preference) {
+  button, .button-link { transition: background-color 0.15s ease; }
+}
+
+@media (min-width: 48rem) {
+  #root { padding: 1.5rem; }
+  .auth-card { margin-top: 3rem; }
+}
+
+@media (max-width: 30rem) {
+  .page-header-user { width: 100%; justify-content: space-between; }
+}
+
+/* Date inputs: focus can sit on the calendar button inside the field, where the plain :focus-visible rule does not reach. */
+input[type="date"]:focus-within, input[type="date"]::-webkit-calendar-picker-indicator:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+
+/* T-090 v2: helpers shared by the dashboard shell. */
+.visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+#root:has(.app-shell) { padding: 0; } /* the dashboard shell is full width; the auth pages keep the padding */
+
+
+/* T-090 v3: typography (self-hosted Inter and Fraunces, see theme.css) and refined controls. */
+body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+.auth-card h1, .page h1 { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.02em; }
+button { box-shadow: var(--shadow-xs), var(--shadow-inset); }
+input:focus, select:focus, textarea:focus { border-color: var(--color-primary); }

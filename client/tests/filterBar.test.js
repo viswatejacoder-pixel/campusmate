@@ -40,12 +40,13 @@ const bar = (filters) => render(h(FilterBar, { filters, subjects, onChange() {},
 
 test('M5-R01 FilterBar has every control and sends only the backend values', () => {
   const html = bar(EMPTY_FILTERS);
-  for (const id of ['filter-q', 'filter-subject', 'filter-priority', 'filter-status', 'filter-due-from', 'filter-due-to', 'filter-sort', 'filter-order']) {
+  for (const id of ['filter-subject', 'filter-priority', 'filter-status', 'filter-due-from', 'filter-due-to', 'filter-sort', 'filter-order']) {
     assert.ok(html.includes(`id="${id}"`), id);
   }
   for (const value of ['low', 'medium', 'high', 'pending', 'completed', 'overdue', 'priority', 'createdAt', 'desc']) {
     assert.ok(html.includes(`<option value="${value}"`), value);
   }
+  assert.ok(!html.includes('filter-q'), 'the search box moved to the header (TopBar)');
   assert.ok(html.includes('<option value="1">Data Structures</option>') && html.includes('<option value="2">DBMS</option>'));
   assert.ok(!html.includes('value="all"') && !html.includes('value="asc"') && !html.includes('value="dueDate"'), 'server defaults are sent as "not set"');
 });
@@ -74,7 +75,7 @@ test('M5-R05 tasks exist but none match the filters: "no match" message, bar sta
   const html = render(h(DashboardContent, { ...base, tasks: [], summary: someTasks, filters: { ...EMPTY_FILTERS, status: 'completed' } }));
   assert.ok(html.includes('No tasks match your current filters.'));
   assert.ok(!html.includes('You have no tasks yet.'));
-  assert.ok(html.includes('id="filter-q"'));
+  assert.ok(html.includes('id="filter-subject"'));
   assert.ok(html.includes('<span class="summary-count">4</span><span class="summary-label">Pending</span>'));
 });
 
@@ -82,12 +83,12 @@ test('M5-R06 no tasks at all: "no tasks yet" message and no filter bar', () => {
   const html = render(h(DashboardContent, { ...base, tasks: [], summary: noTasks, filters: EMPTY_FILTERS }));
   assert.ok(html.includes('You have no tasks yet.'));
   assert.ok(!html.includes('No tasks match'));
-  assert.ok(!html.includes('id="filter-q"'));
+  assert.ok(!html.includes('id="filter-subject"'));
 });
 
 test('M5-R07 matching tasks list normally with the filter bar', () => {
   const html = render(h(DashboardContent, { ...base, summary: someTasks, filters: EMPTY_FILTERS }));
-  assert.ok(html.includes('DS assignment 2') && html.includes('id="filter-q"'));
+  assert.ok(html.includes('DS assignment 2') && html.includes('id="filter-subject"'));
   assert.ok(!html.includes('No tasks match') && !html.includes('You have no tasks yet.'));
 });
 

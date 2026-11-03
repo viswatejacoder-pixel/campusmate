@@ -1,3 +1,5 @@
+import Icon from './Icon.jsx';
+
 // The four dashboard counts from GET /api/tasks/summary. Text labels, so nothing relies on colour. React escapes all text.
 const CARDS = [
   ['pending', 'Pending'],
@@ -9,10 +11,11 @@ const CARDS = [
 export default function SummaryCards({ summary }) {
   return (
     <section className="summary" aria-labelledby="summary-heading">
-      <h2 id="summary-heading">Summary</h2>
+      <h2 id="summary-heading" className="visually-hidden">Summary</h2>
       <ul className="summary-cards">
         {CARDS.map(([key, label]) => (
           <li key={key} className="summary-card">
+            <Icon name={key} size={20} />
             <span className="summary-count">{summary[key]}</span>
             <span className="summary-label">{label}</span>
           </li>

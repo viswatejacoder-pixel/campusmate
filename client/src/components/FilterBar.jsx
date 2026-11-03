@@ -11,8 +11,9 @@ const ORDER_OPTIONS = [['', 'Ascending'], ['desc', 'Descending']];
 
 const options = (list) => list.map(([value, label]) => <option key={value} value={value}>{label}</option>);
 
-// Search, subject, priority, status, due-date range, sort field and sort order (T-080 M5). Controlled by the page:
+// Subject, priority, status, due-date range, sort field and sort order (T-080 M5). Controlled by the page:
 // `filters` is the draft (text values), onChange(name, value) edits one field, onReset() clears them all.
+// The task search text lives in the header (TopBar) but is part of the same draft, so onReset() clears it too.
 // Field errors come from the same validateTaskFilters() that builds the request; an invalid draft sends no request.
 // The form never submits (Enter in the search box would otherwise reload the page).
 export default function FilterBar({ filters, subjects, onChange, onReset }) {
@@ -20,7 +21,6 @@ export default function FilterBar({ filters, subjects, onChange, onReset }) {
   const set = (name) => (event) => onChange(name, event.target.value);
   return (
     <form className="filter-bar" role="search" aria-label="Filter tasks" onSubmit={(event) => event.preventDefault()}>
-      <FormField id="filter-q" label="Search" type="search" autoComplete="off" value={filters.q} onChange={set('q')} error={fields.q} />
       <FormField id="filter-subject" as="select" label="Subject" value={filters.subjectId} onChange={set('subjectId')} error={fields.subjectId}>
         <option value="">All subjects</option>
         {subjects.map((subject) => (
