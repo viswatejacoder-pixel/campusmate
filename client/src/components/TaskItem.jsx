@@ -12,7 +12,7 @@ export default function TaskItem({ task, locked = false, pending = false, onTogg
   const toggleLabel = task.isCompleted ? 'Mark incomplete' : 'Mark complete';
 
   return (
-    <li className={`task-item${task.isCompleted ? ' task-item--completed' : ''}`}>
+    <li className={`task-item${task.isCompleted ? ' task-item--completed' : ''}`} data-priority={task.priority}>
       <h3 className="task-title break-anywhere">{task.title}</h3>
       {(task.isOverdue || task.isDueSoon) && (
         <p className="task-flags">

@@ -1,3 +1,5 @@
+import Icon from './Icon.jsx';
+
 // Dashboard header (T-090): the task search (moved here from the filter bar) and the account. The page owns the text (the filter
 // draft's `q`), so Clear filters empties this box too. `error` is the same message validateTaskFilters() gives for the search text.
 export default function TopBar({ user, search, onSearchChange, searchDisabled = false, error }) {
@@ -7,17 +9,20 @@ export default function TopBar({ user, search, onSearchChange, searchDisabled = 
     <header className="topbar">
       <form className="topbar-search" role="search" aria-label="Search tasks" onSubmit={(event) => event.preventDefault()}>
         <label htmlFor="task-search" className="visually-hidden">Search tasks</label>
-        <input
-          id="task-search"
-          type="search"
-          placeholder="Search tasks"
-          autoComplete="off"
-          value={search}
-          disabled={searchDisabled}
-          aria-invalid={error ? 'true' : undefined}
-          aria-describedby={error ? 'task-search-error' : undefined}
-          onChange={(event) => onSearchChange(event.target.value)}
-        />
+        <div className="search-field">
+          <Icon name="search" size={18} />
+          <input
+            id="task-search"
+            type="search"
+            placeholder="Search tasks"
+            autoComplete="off"
+            value={search}
+            disabled={searchDisabled}
+            aria-invalid={error ? 'true' : undefined}
+            aria-describedby={error ? 'task-search-error' : undefined}
+            onChange={(event) => onSearchChange(event.target.value)}
+          />
+        </div>
         {error && (
           <p id="task-search-error" className="field-error">
             {error}

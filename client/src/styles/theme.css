@@ -1,61 +1,71 @@
-/* CampusMate design tokens (T-090 "Editorial Ink"). TEMPORARY palette: the final brand colours replace the values in the first two
-   groups only. Every other stylesheet uses var(--...) and derives tints, gradients and glows from these with color-mix(), so one edit
-   here restyles the whole app. Fonts: Inter (UI) and Fraunces (display, used sparingly), both SIL OFL 1.1, self-hosted (public/fonts). */
-@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('/fonts/inter-latin-var.woff2') format('woff2'); }
-@font-face { font-family: 'Fraunces'; font-style: normal; font-weight: 500 700; font-display: swap; src: url('/fonts/fraunces-latin-var.woff2') format('woff2'); }
-
+/* CampusMate design tokens (T-095 "Ink & Glass", from the approved Figma design system).
+   Ink buttons on cool neutrals, one ultramarine accent for selection, focus and progress, and Liquid Glass reserved for floating
+   layers (sidebar, tab bar, dialogs, search). Every other stylesheet uses var(--...) and derives tints with color-mix().
+   Fonts: Bricolage Grotesque (headings) and Geist (interface), both SIL OFL 1.1, self-hosted through @fontsource-variable (see main.jsx). */
 :root {
-  /* 1. Brand (replace with the final palette) */
-  --color-primary: #3730a3;
-  --color-primary-deep: #231d63;
-  --color-accent: #5b4fcf;
-  --color-danger: #b3261e;
-  --color-success: #1f6b45;
-  --color-warning: #8a5300;
+  /* 1. Brand */
+  --color-primary: #0e0f10;
+  --color-primary-deep: #000000;
+  --color-brand: #2d5bff;
+  --color-accent: #2d5bff;
+  --color-danger: #c4262b;
+  --color-success: #14784a;
+  --color-warning: #9a5b00;
 
-  /* 2. Neutrals (warm paper) */
-  --color-bg: #f6f4ef;
+  /* 2. Neutrals (cool, 4.5:1 or better for text on white) */
+  --color-bg: #f5f5f7;
   --color-surface: #ffffff;
-  --color-surface-alt: #faf8f4;
-  --color-text: #1b1a22;
-  --color-text-muted: #55525e;
-  --color-border: #e4e0d6;
-  --color-border-strong: #7d7989;
-  --color-divider: #ece8de;
+  --color-surface-alt: #f0f0f2;
+  --color-text: #0e0f10;
+  --color-text-muted: #6b6b75;
+  --color-border: #e3e3e8;
+  --color-border-strong: #8c8c94;
+  --color-divider: #ececf0;
   --color-on-primary: #ffffff;
-  --color-backdrop: rgba(27, 26, 34, 0.5);
+  --color-backdrop: rgba(14, 15, 16, 0.32);
 
   /* 3. Derived (do not edit) */
-  --color-primary-hover: color-mix(in srgb, var(--color-primary) 82%, #000);
-  --color-primary-tint: color-mix(in srgb, var(--color-primary) 8%, #fff);
-  --color-primary-line: color-mix(in srgb, var(--color-primary) 30%, #fff);
-  --color-focus: var(--color-primary);
+  --color-primary-hover: #2a2b30;
+  --color-primary-tint: color-mix(in srgb, var(--color-text) 5%, #fff);
+  --color-primary-line: color-mix(in srgb, var(--color-text) 16%, #fff);
+  --color-brand-tint: color-mix(in srgb, var(--color-brand) 10%, #fff);
+  --color-brand-line: color-mix(in srgb, var(--color-brand) 32%, #fff);
+  --color-focus: var(--color-brand);
   --color-danger-dark: color-mix(in srgb, var(--color-danger) 80%, #000);
-  --color-danger-bg: color-mix(in srgb, var(--color-danger) 8%, #fff);
-  --color-success-bg: color-mix(in srgb, var(--color-success) 9%, #fff);
-  --color-warning-bg: color-mix(in srgb, var(--color-warning) 10%, #fff);
-  --color-warning-border: color-mix(in srgb, var(--color-warning) 55%, #fff);
+  --color-danger-bg: color-mix(in srgb, var(--color-danger) 9%, #fff);
+  --color-success-bg: color-mix(in srgb, var(--color-success) 10%, #fff);
+  --color-warning-bg: color-mix(in srgb, #d98e04 14%, #fff);
+  --color-warning-border: color-mix(in srgb, var(--color-warning) 40%, #fff);
   --color-grid-line: color-mix(in srgb, var(--color-text) 4.5%, transparent);
-  --color-chart-done: var(--color-primary);
-  --color-chart-pending: #8f8aa3;
+  --color-chart-done: var(--color-brand);
+  --color-chart-pending: #b9bcc8;
   --color-chart-overdue: var(--color-danger);
-  --color-chart-track: color-mix(in srgb, var(--color-text) 8%, #fff);
-  --gradient-hero: linear-gradient(140deg, var(--color-primary-deep) 0%, var(--color-primary) 55%, var(--color-accent) 130%);
-  --gradient-sidebar: linear-gradient(180deg, var(--color-surface) 0%, var(--color-surface-alt) 100%);
+  --color-chart-track: color-mix(in srgb, var(--color-text) 7%, #fff);
+  --gradient-hero: linear-gradient(145deg, #0e0f10 0%, #23252b 100%);
 
   /* Typography */
-  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Geist Variable', 'Geist', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Bricolage Grotesque', 'Geist Variable', system-ui, sans-serif;
 
-  /* Depth: layered shadows, hairline borders */
-  --shadow-xs: 0 1px 1px rgba(27, 26, 34, 0.04);
-  --shadow-sm: 0 1px 2px rgba(27, 26, 34, 0.05), 0 2px 8px -2px rgba(27, 26, 34, 0.06);
-  --shadow-md: 0 2px 4px rgba(27, 26, 34, 0.04), 0 10px 28px -10px rgba(27, 26, 34, 0.14);
-  --shadow-glow: 0 2px 4px rgba(27, 26, 34, 0.08), 0 18px 36px -14px color-mix(in srgb, var(--color-primary) 55%, transparent);
-  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  /* Depth: hairline borders and soft layered shadows */
+  --shadow-xs: 0 1px 1px rgba(14, 15, 16, 0.04);
+  --shadow-sm: 0 1px 2px rgba(14, 15, 16, 0.04), 0 6px 18px -8px rgba(14, 15, 16, 0.08);
+  --shadow-md: 0 1px 2px rgba(14, 15, 16, 0.04), 0 14px 32px -12px rgba(14, 15, 16, 0.12);
+  --shadow-lift: 0 2px 4px rgba(14, 15, 16, 0.05), 0 22px 40px -16px rgba(14, 15, 16, 0.2);
+  --shadow-glow: 0 2px 4px rgba(14, 15, 16, 0.08), 0 18px 36px -14px color-mix(in srgb, var(--color-brand) 55%, transparent);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.8);
   --radius-sm: 8px;
-  --radius-md: 10px;
+  --radius-md: 12px;
   --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+
+  /* Liquid Glass (floating layers only; see design.css for the fallbacks) */
+  --glass-fill: rgba(255, 255, 255, 0.58);
+  --glass-fill-strong: rgba(255, 255, 255, 0.8);
+  --glass-edge: rgba(255, 255, 255, 0.75);
+  --glass-blur: 28px;
+  --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 16px 40px -14px rgba(14, 15, 16, 0.18);
 
   /* Motion */
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);

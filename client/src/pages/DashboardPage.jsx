@@ -18,9 +18,26 @@ import TopBar from '../components/TopBar.jsx';
 import FilterBar from '../components/FilterBar.jsx';
 import TaskList from '../components/TaskList.jsx';
 import SubjectManager from '../components/SubjectManager.jsx';
+import SubjectProgress from '../components/SubjectProgress.jsx';
 import TaskForm from '../components/TaskForm.jsx';
 import ConfirmDialog from '../components/ConfirmDialog.jsx';
 import '../styles/dashboard.css';
+
+// Heading helpers (T-095): today's date, a time-of-day greeting with the user's first name, and a sentence built from the real
+// summary counts. Falls back to the plain "Dashboard" title when the account has no name.
+const headingDate = () => new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+function headingTitle(user) {
+  const first = String((user && user.name) || '').trim().split(/\s+/)[0];
+  if (!first) return 'Dashboard';
+  const hour = new Date().getHours();
+  return `${hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'}, ${first}`;
+}
+function headingNote(data) {
+  if (data.status !== 'ready' || !data.summary) return 'Plan, prioritize, and keep track of your tasks.';
+  const { overdue, dueSoon, pending } = data.summary;
+  if (overdue > 0 || dueSoon > 0) return `${overdue} overdue and ${dueSoon} due soon.`;
+  return pending > 0 ? `${pending} pending, nothing urgent right now.` : 'Plan, prioritize, and keep track of your tasks.';
+}
 
 const UPCOMING_LIMIT = 5;
 const DEADLINES_LOADING = { status: 'loading', tasks: [] };
@@ -40,7 +57,7 @@ export function DashboardContent({
   deleteTarget = null, deleteError = '', onConfirmDelete, onCancelDelete,
   onCreateSubject, onRenameSubject, onDeleteSubject,
   filters = null, onFilterChange, onResetFilters, listLoading = false, listError = null, onRetryList,
-  deadlines = null, onRetryDeadlines, expanded = false, onToggleExpanded,
+  deadlines = null, onRetryDeadlines, expanded = false, onToggleExpanded, subjectTasks = null,
 }) {
   if (status === 'loading') return <p role="status">Loading your dashboard...</p>;
 
@@ -85,7 +102,7 @@ export function DashboardContent({
 
       <div className={showTasks ? 'dash-grid' : 'dash-grid dash-grid--solo'}>
         {showTasks && (
-          <section className="panel" aria-labelledby="tasks-heading">
+          <section className="panel panel--tasks" aria-labelledby="tasks-heading">
             <div className="section-header">
               <h2 id="tasks-heading" tabIndex={-1}>Tasks</h2>
               {onNewTask && !noSubjects && (
@@ -143,7 +160,7 @@ export function DashboardContent({
         <div className="dash-side">
           {deadlines && <UpcomingDeadlines deadlines={deadlines} onRetry={onRetryDeadlines} />}
           <ProgressPanel summary={summary} />
-          <section className="panel" aria-labelledby="subjects-heading">
+          <section className="panel panel--subjects" aria-labelledby="subjects-heading">
             <h2 id="subjects-heading" tabIndex={-1}>Subjects</h2>
             {onCreateSubject && onRenameSubject && onDeleteSubject ? (
               <SubjectManager subjects={subjects} locked={locked || deleteTarget !== null} onCreate={onCreateSubject} onRename={onRenameSubject} onDelete={onDeleteSubject} />
@@ -158,6 +175,7 @@ export function DashboardContent({
                 ))}
               </ul>
             )}
+            {subjectTasks && <SubjectProgress subjects={subjects} tasks={subjectTasks} />}
           </section>
         </div>
       </div>
@@ -190,6 +208,8 @@ export default function DashboardPage() {
   const [listError, setListError] = useState(null);
   const [deadlines, setDeadlines] = useState(DEADLINES_LOADING);
   const [deadlineGuard] = useState(createLatestRequestGuard); // tickets for the Upcoming deadlines request only
+  const [subjectTasks, setSubjectTasks] = useState(null); // every task, unfiltered: the per-subject progress under the subject list
+  const [subjectTasksGuard] = useState(createLatestRequestGuard);
   const [refreshError, setRefreshError] = useState(null);
   const [actionError, setActionError] = useState('');
   const [form, setForm] = useState(null);
@@ -233,6 +253,16 @@ export default function DashboardPage() {
       if (deadlineGuard.isCurrent(ticket)) setDeadlines({ status: 'error', tasks: [] });
     }
   }, [deadlineGuard]);
+  // Per-subject progress counts every task whatever the filters, so it has its own unfiltered request. A failure keeps the old numbers.
+  const fetchSubjectTasks = useCallback(async () => {
+    const ticket = subjectTasksGuard.start();
+    try {
+      const tasks = await listTasks({});
+      if (subjectTasksGuard.isCurrent(ticket)) setSubjectTasks(tasks);
+    } catch {
+      // nothing to show or change
+    }
+  }, [subjectTasksGuard]);
   // Turns draft changes into requests: search text waits for a pause in typing, other controls apply at once, an invalid or
   // unchanged draft sends nothing (utils/taskFilters.js). load() and refresh() read scheduler.applied, the filters last applied.
   const [scheduler] = useState(() => createFilterScheduler({ apply: fetchTasks }));
@@ -247,6 +277,7 @@ export default function DashboardPage() {
     setListError(null);
     setListLoading(false);
     fetchDeadlines();
+    fetchSubjectTasks();
     try {
       const [subjects, tasks, summary] = await Promise.all([listSubjects(), listTasks(scheduler.applied), getTaskSummary()]);
       if (!guard.isCurrent(ticket)) return;
@@ -255,7 +286,7 @@ export default function DashboardPage() {
       if (!guard.isCurrent(ticket)) return;
       setData({ ...LOADING, status: 'error', error });
     }
-  }, [guard, listGuard, scheduler, fetchDeadlines]);
+  }, [guard, listGuard, scheduler, fetchDeadlines, fetchSubjectTasks]);
 
   // After a change: fetch subjects, tasks and the summary again (a subject change can affect all three). Same ticket rule as load().
   // The data on screen is replaced only when all answers arrive; if the refresh fails the old data stays and a notice is shown. Never rejects.
@@ -265,6 +296,7 @@ export default function DashboardPage() {
     const ticket = guard.start();
     const listTicket = listGuard.start();
     fetchDeadlines();
+    fetchSubjectTasks();
     try {
       const [subjects, tasks, summary] = await Promise.all([listSubjects(), listTasks(scheduler.applied), getTaskSummary()]);
       if (!guard.isCurrent(ticket)) return;
@@ -280,7 +312,7 @@ export default function DashboardPage() {
       setRefreshError(error);
       if (listGuard.isCurrent(listTicket)) setListLoading(false);
     }
-  }, [guard, listGuard, scheduler, fetchDeadlines]);
+  }, [guard, listGuard, scheduler, fetchDeadlines, fetchSubjectTasks]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -290,9 +322,10 @@ export default function DashboardPage() {
       guard.invalidate(); // unmounted: every request still in flight becomes stale
       listGuard.invalidate();
       deadlineGuard.invalidate();
+      subjectTasksGuard.invalidate();
       scheduler.dispose(); // and a search waiting for its pause never fires
     };
-  }, [load, guard, listGuard, deadlineGuard, scheduler]);
+  }, [load, guard, listGuard, deadlineGuard, subjectTasksGuard, scheduler]);
 
   // Every draft change goes to the scheduler (the first run, with untouched controls, sends nothing).
   useEffect(() => {
@@ -430,8 +463,9 @@ export default function DashboardPage() {
         />
         <main className="dashboard" id="main-content" tabIndex={-1}>
           <div className="dashboard-heading">
-            <h1>Dashboard</h1>
-            <p className="muted">Plan, prioritize, and keep track of your tasks.</p>
+            <p className="eyebrow">{headingDate()}</p>
+            <h1>{headingTitle(user)}</h1>
+            <p className="muted">{headingNote(data)}</p>
           </div>
           <DashboardContent
             {...data}
@@ -465,6 +499,7 @@ export default function DashboardPage() {
             onRetryList={retryList}
             deadlines={deadlines}
             onRetryDeadlines={fetchDeadlines}
+            subjectTasks={subjectTasks}
           />
         </main>
       </div>

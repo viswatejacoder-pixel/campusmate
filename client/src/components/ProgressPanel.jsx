@@ -20,7 +20,7 @@ export default function ProgressPanel({ summary }) {
   ];
   let offset = 0;
   return (
-    <section className="panel" aria-labelledby="progress-heading">
+    <section className="panel panel--progress" aria-labelledby="progress-heading">
       <h2 id="progress-heading">Progress</h2>
       {parts.total === 0 ? (
         <p className="muted">No tasks yet, so there is no progress to show.</p>
@@ -36,6 +36,7 @@ export default function ProgressPanel({ summary }) {
                 <circle key={className} className={`ring-segment ${className}`} cx="21" cy="21" r={RADIUS} strokeDasharray={`${length} ${100 - length}`} strokeDashoffset={25 - start} />
               ) : null;
             })}
+            <text className="ring-label" x="21" y="21" textAnchor="middle" dominantBaseline="central">{parts.percent}%</text>
           </svg>
           <p className="progress-percent">
             <strong>{parts.percent}%</strong> completed ({parts.completed} of {parts.total} tasks)
@@ -46,6 +47,7 @@ export default function ProgressPanel({ summary }) {
                 <span className={`swatch swatch-${className}`} aria-hidden="true" />
                 <dt>{label}</dt>
                 <dd>{count}</dd>
+                <span className="legend-bar" aria-hidden="true"><span className={`swatch-${className}`} style={{ width: `${(count / parts.total) * 100}%` }} /></span>
               </div>
             ))}
           </dl>
