@@ -152,12 +152,16 @@ label { color: var(--lg-text); }
 .brand-mark { width: 2rem; height: 2rem; border-radius: 9px; background: linear-gradient(180deg, #5b7dff, #3d5df0); box-shadow: 0 6px 14px -6px rgba(61, 99, 255, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
 .nav-list a { position: relative; gap: 0.6rem; padding: 0.5rem 0.8rem; font-size: 1.0625rem; font-weight: 600; color: var(--lg-text-2); border: 1.5px solid transparent; border-radius: 999px; }
 .nav-list a:hover { color: var(--lg-text); background: color-mix(in srgb, var(--lg-text) 6%, transparent); }
-.nav-list a[aria-current="page"] { color: var(--lg-blue-ink); background: var(--lg-nav-active); border-color: var(--lg-nav-ring); box-shadow: 0 8px 18px -10px rgba(61, 99, 255, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.9); }
-:root[data-theme="dark"] .nav-list a[aria-current="page"] { color: var(--lg-text); box-shadow: 0 8px 18px -10px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.22); }
+.nav-list a[aria-current="page"] { color: var(--lg-blue-ink); background: transparent; border-color: transparent; box-shadow: none; } /* the pill itself is the moving .nav-bubble below */
+:root[data-theme="dark"] .nav-list a[aria-current="page"] { color: var(--lg-text); }
+/* Active indicator: one glass bubble that Sidebar.jsx moves and sizes onto the active link (the former per-link pill). */
+.nav-list { position: relative; }
+.nav-bubble { position: absolute; left: 0; top: 0; width: 0; height: 0; box-sizing: border-box; margin: 0; padding: 0; list-style: none; pointer-events: none; border-radius: 999px; background: var(--lg-nav-active); border: 1.5px solid var(--lg-nav-ring); box-shadow: 0 8px 18px -10px rgba(61, 99, 255, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.9); }
+:root[data-theme="dark"] .nav-bubble { box-shadow: 0 8px 18px -10px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.22); }
 .nav-list a[aria-current="page"] .icon { color: var(--lg-blue); }
-.nav-list a[aria-current="page"]::after { content: ''; position: absolute; left: calc(50% - 12px); top: 32px; width: 24px; height: 34px; border-radius: 50%; pointer-events: none;
+.nav-bubble::after { content: ''; position: absolute; left: calc(50% - 12px); top: 32px; width: 24px; height: 34px; border-radius: 50%; pointer-events: none;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(190, 200, 240, 0.35)); border: 1px solid rgba(255, 255, 255, 0.7); box-shadow: 0 6px 12px -6px rgba(60, 70, 140, 0.45); }
-:root[data-theme="dark"] .nav-list a[aria-current="page"]::after { background: linear-gradient(180deg, rgba(60, 56, 90, 0.9), rgba(30, 30, 50, 0.9)); border-color: rgba(255, 255, 255, 0.22); box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.8); }
+:root[data-theme="dark"] .nav-bubble::after { background: linear-gradient(180deg, rgba(60, 56, 90, 0.9), rgba(30, 30, 50, 0.9)); border-color: rgba(255, 255, 255, 0.22); box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.8); }
 .sidebar-foot { display: grid; gap: 1.3rem; }
 .theme-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 0.25rem; padding: 0.22rem; border-radius: 999px; background: var(--lg-ghost); border: 1.5px solid var(--lg-line); }
 .theme-option, .theme-option:not(:disabled):hover { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; min-height: 2.3rem; padding: 0.2rem 0.5rem; font-size: 0.9375rem; color: var(--lg-muted); background: transparent; border: 1.5px solid transparent; box-shadow: none; filter: none; }
@@ -177,7 +181,8 @@ label { color: var(--lg-text); }
   .sidebar-foot { display: flex; align-items: center; gap: 0.5rem; }
   .sidebar nav { background: var(--lg-side); border: 1px solid var(--lg-side-edge); box-shadow: var(--lg-shadow); -webkit-backdrop-filter: blur(26px) saturate(1.5); backdrop-filter: blur(26px) saturate(1.5); }
   .nav-list a { border-radius: 22px; font-size: 0.75rem; }
-  .nav-list a[aria-current="page"]::after { display: none; }
+  .nav-bubble { border-radius: 22px; }
+  .nav-bubble::after { display: none; }
   .theme-toggle { grid-template-columns: auto auto; }
   .theme-option { min-height: 2rem; padding: 0.15rem 0.55rem; }
 }
@@ -347,7 +352,8 @@ label { color: var(--lg-text); }
 /* ---------- 9. Motion ---------- */
 @media (prefers-reduced-motion: no-preference) {
   .summary-card, .panel { transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
-  .nav-list a[aria-current="page"]::after { animation: bead 4.8s ease-in-out infinite; }
+  .nav-bubble::after { animation: bead 4.8s ease-in-out infinite; }
+  .nav-bubble[data-ready] { transition: transform 480ms cubic-bezier(0.22, 1.15, 0.36, 1), width 320ms var(--ease), height 320ms var(--ease); } /* glide with a slight settle; retargets from the current position when clicks come quickly */
 }
 @keyframes bead { 50% { transform: translateY(2px) scale(1.04); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
