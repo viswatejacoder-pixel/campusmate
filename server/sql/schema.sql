@@ -15,10 +15,15 @@ CREATE TABLE IF NOT EXISTS users (
   verification_token_hash CHAR(64) NULL,   -- SHA-256 hex; the raw token is never stored
   verification_expires_at DATETIME NULL,
   verification_sent_at    DATETIME NULL,
+  -- Password reset (migrations/002_password_reset.sql). NULL = no reset requested.
+  reset_token_hash CHAR(64) NULL,          -- SHA-256 hex; the raw token is never stored
+  reset_expires_at DATETIME NULL,
+  reset_sent_at    DATETIME NULL,
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_users_email (email),
-  UNIQUE KEY uq_users_verification_token (verification_token_hash)
+  UNIQUE KEY uq_users_verification_token (verification_token_hash),
+  UNIQUE KEY uq_users_reset_token (reset_token_hash)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS subjects (

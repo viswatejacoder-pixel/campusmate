@@ -2,10 +2,10 @@
 import bcrypt from 'bcryptjs';
 import AppError from '../utils/AppError.js';
 import { SESSION_COOKIE_NAME, sessionCookieOptions } from '../config/session.js';
-import { validateRegister, validateLogin, validateVerify, validateResend } from '../validators/authValidator.js';
-import { createUser, findByEmail, findById, overwritePendingUser, claimResend, verifyByTokenHash } from '../models/userModel.js';
+import { validateRegister, validateLogin, validateVerify, validateResend, validateForgot, validateReset } from '../validators/authValidator.js';
+import { createUser, findByEmail, findById, overwritePendingUser, claimResend, verifyByTokenHash, claimPasswordReset, resetPasswordByTokenHash } from '../models/userModel.js';
 import { generateToken, hashToken } from '../utils/tokens.js';
-import { sendVerificationEmail } from '../services/mailer.js';
+import { sendVerificationEmail, sendPasswordResetEmail } from '../services/mailer.js';
 
 const BCRYPT_COST = 12;
 const MAX_PASSWORD_BYTES = 72;
@@ -140,4 +140,46 @@ export async function resendVerification(req, res) {
     }
   }
   res.status(202).json({ message: RESEND_MESSAGE });
+}
+
+// ---- Password reset (api-spec.md section 3) ----
+const FORGOT_MESSAGE = 'If a verified account exists for this email, a password reset link has been sent.';
+const INVALID_RESET = () =>
+  new AppError(400, 'TOKEN_INVALID_OR_EXPIRED', 'This password reset link is invalid, expired, or already used.');
+
+// Same rule as sendSafely: a mail failure never changes the response; only a short code is logged (never the token or the link).
+async function sendResetSafely(to, name, token) {
+  try {
+    await sendPasswordResetEmail({ to, name, token });
+  } catch (err) {
+    console.error(`Password reset email failed (${err.code || err.name || 'UNKNOWN'})`);
+  }
+}
+
+// Always the same 202 for registered, unverified, unknown and cooling-down addresses. Only a verified account outside the cooldown gets
+// a token (its SHA-256 hash is stored) and an email. The mail is not awaited so response time does not reveal whether it was sent.
+export async function forgotPassword(req, res) {
+  const { fields, value } = validateForgot(req.body);
+  failValidation(fields);
+
+  const token = generateToken();
+  if (await claimPasswordReset({ email: value.email, tokenHash: hashToken(token) })) {
+    const account = await findByEmail(value.email);
+    if (account) void sendResetSafely(value.email, account.name, token);
+  }
+  res.status(202).json({ message: FORGOT_MESSAGE });
+}
+
+// Validates the new password first, then spends the single-use token in one transaction (userModel.resetPasswordByTokenHash), which
+// also deletes the user's stored sessions. No auto-login: the person logs in again with the new password.
+export async function resetPassword(req, res) {
+  const { token, fields, value } = validateReset(req.body);
+  failValidation(fields);
+  if (!token) throw INVALID_RESET();
+
+  const passwordHash = await bcrypt.hash(value.password, BCRYPT_COST);
+  if (!(await resetPasswordByTokenHash({ tokenHash: hashToken(token), passwordHash }))) throw INVALID_RESET();
+
+  res.clearCookie(SESSION_COOKIE_NAME, sessionCookieOptions); // this browser's own session (if any) was just deleted server-side
+  res.json({ message: 'Password updated. You can now log in with your new password.' });
 }

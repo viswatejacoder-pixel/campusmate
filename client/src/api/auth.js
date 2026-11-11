@@ -12,3 +12,8 @@ export const logoutRequest = () => request('POST', '/api/auth/logout');
 export const verifyEmailRequest = (token) => request('POST', '/api/auth/verify-email', { body: { token }, ...expect401 });
 // T-075: always 202 { message } whether or not the account exists; throws ApiError for 400 VALIDATION_ERROR and 429 RATE_LIMITED.
 export const resendVerificationRequest = (email) => request('POST', '/api/auth/resend-verification', { body: { email }, ...expect401 });
+// Password reset: always 202 { message } whether or not a verified account exists; throws ApiError for 400 VALIDATION_ERROR and 429 RATE_LIMITED.
+export const forgotPasswordRequest = (email) => request('POST', '/api/auth/forgot-password', { body: { email }, ...expect401 });
+// Resolves { message }, or throws ApiError: 400 VALIDATION_ERROR (fields), 400 TOKEN_INVALID_OR_EXPIRED (every bad token), 429 RATE_LIMITED.
+export const resetPasswordRequest = (token, password, confirmPassword) =>
+  request('POST', '/api/auth/reset-password', { body: { token, password, confirmPassword }, ...expect401 });

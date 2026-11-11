@@ -1,7 +1,7 @@
 // Mounted at /api/auth (app.js). Express 5 forwards errors from async handlers to errorHandler automatically.
 import { Router } from 'express';
 import requireAuth from '../middleware/requireAuth.js';
-import { register, login, logout, me, verifyEmail, resendVerification } from '../controllers/authController.js';
+import { register, login, logout, me, verifyEmail, resendVerification, forgotPassword, resetPassword } from '../controllers/authController.js';
 import { env } from '../config/env.js';
 import { createRateLimiter, emailKey } from '../middleware/rateLimit.js';
 
@@ -21,6 +21,14 @@ router.post(
   resendVerification,
 );
 router.post('/logout', logout);
+// Password reset: request (per IP and per email) and token submission (per IP; the 256-bit token cannot be guessed, the limit stops floods).
+router.post(
+  '/forgot-password',
+  limit({ windowMs: 15 * MIN, max: 5 }), // per IP
+  limit({ windowMs: 15 * MIN, max: 3, key: emailKey }), // per email
+  forgotPassword,
+);
+router.post('/reset-password', limit({ windowMs: 15 * MIN, max: 10 }), resetPassword);
 router.get('/me', requireAuth, me);
 
 export default router;

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import FormField from '../components/FormField.jsx';
+import '../styles/passwordReset.css';
 
 // Mirrors the server: login only needs both values present (authValidator.validateLogin).
 function validate(email, password) {
@@ -81,6 +82,9 @@ export default function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           error={fieldErrors.password}
         />
+        <p className="auth-forgot">
+          <Link to="/forgot-password">Forgot password?</Link>
+        </p>
         <button type="submit" disabled={submitting}>
           {submitting ? 'Logging in...' : 'Log in'}
         </button>

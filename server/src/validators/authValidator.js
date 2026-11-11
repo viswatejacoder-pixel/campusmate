@@ -66,3 +66,25 @@ export function validateResend(body) {
   else if (email.length > 255 || !EMAIL_RE.test(email)) fields.email = 'Enter a valid email address.';
   return { fields, value: { email } };
 }
+
+// Forgot password: same rule as resend (a well-formed email; the controller answers identically for every address).
+export const validateForgot = validateResend;
+
+// Reset password: { token, password, confirmPassword }. A malformed token is not a field error (the controller answers it with
+// the same generic 400 as a wrong token). The password policy is the registration policy (8 to 72 characters, not trimmed).
+export function validateReset(body) {
+  const b = asObject(body);
+  const fields = {};
+
+  const token = typeof b.token === 'string' && TOKEN_RE.test(b.token) ? b.token : null;
+
+  const password = typeof b.password === 'string' ? b.password : '';
+  if (!password) fields.password = 'Password is required.';
+  else if (!isPasswordLengthOk(password)) fields.password = 'Password must be 8 to 72 characters.';
+
+  const confirmPassword = typeof b.confirmPassword === 'string' ? b.confirmPassword : '';
+  if (!confirmPassword) fields.confirmPassword = 'Confirm your new password.';
+  else if (confirmPassword !== password) fields.confirmPassword = 'Passwords do not match.';
+
+  return { token, fields, value: { password } };
+}
