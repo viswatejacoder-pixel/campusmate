@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Icon from './Icon.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
+import DesignModeToggle from './DesignModeToggle.jsx';
+import logo from '../assets/campusmate-logo.svg';
 import { indexFromHash, pickActive } from '../utils/navActive.js';
 
 // Dashboard sidebar (T-090). The links jump to sections of this page (the only route behind the login is /dashboard).
@@ -112,8 +114,7 @@ export default function Sidebar({ onLogout, loggingOut = false }) {
   return (
     <aside className="sidebar">
       <div className="brand">
-        <span className="brand-mark" aria-hidden="true"><Icon name="check" size={18} /></span>
-        <span>CampusMate</span>
+        <span className="brand-logo"><img src={logo} alt="CampusMate" draggable="false" /></span>
       </div>
       <nav aria-label="Dashboard sections">
         <ul className="nav-list">
@@ -130,6 +131,7 @@ export default function Sidebar({ onLogout, loggingOut = false }) {
       </nav>
       <div className="sidebar-foot">
       <ThemeToggle />
+      <DesignModeToggle />
       <button type="button" className="button-secondary sidebar-logout" onClick={onLogout} disabled={loggingOut}>
         <Icon name="logout" />{loggingOut ? 'Logging out...' : 'Log out'}
       </button>

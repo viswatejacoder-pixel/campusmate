@@ -16,6 +16,7 @@ npm-debug.log*
 
 # Test output
 coverage/
+.qa-tmp/
 
 # Local database dumps (may contain real data)
 backups/

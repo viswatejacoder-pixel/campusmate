@@ -48,7 +48,13 @@ Versions checked on the author's machine on 2026-10-29:
 
 In development the Vite server forwards `/api` requests to Express, so the browser only talks to port 5173.
 
-**Production-style run (planned, D-020):** `cd client && npm run build`, then `cd server && npm start`. Express serves the built client and the API on `http://localhost:3000`. For a local demo over plain HTTP keep `NODE_ENV=development`; see [docs/security.md](docs/security.md) section 2.
+**Production-style run:** `cd client && npm run build`, then `cd server && npm start`. Express serves the built client and the API on `http://localhost:3000`. For a local demo over plain HTTP keep `NODE_ENV=development`; see [docs/security.md](docs/security.md) section 2.
+
+### Free demo deployment
+
+The repository includes [`render.yaml`](render.yaml) for one same-origin Render web service. It builds the Vite client, serves it from Express, and keeps `/api` requests and session cookies first-party. Render provides HTTPS and sets `PORT` automatically; the Blueprint opts into one trusted proxy hop and MySQL TLS. Render's free service sleeps after inactivity and is suitable for a demo, not a production SLA.
+
+For the database, provision a separate MySQL-compatible managed instance and set its connection values in Render's environment settings. Apply [`server/sql/schema.sql`](server/sql/schema.sql) to a new database, then apply `server/sql/migrations/001_email_verification.sql` and `server/sql/migrations/002_password_reset.sql` in that order when upgrading an existing schema. Do not upload the local database or reuse local credentials. Set `APP_BASE_URL` to the final HTTPS service URL and keep `MAIL_TRANSPORT=brevo` with a verified sender.
 
 ## Environment variables (server only, in `server/.env`)
 | Variable | Required | Example / default | Purpose |
@@ -60,6 +66,7 @@ In development the Vite server forwards `/api` requests to Express, so the brows
 | `DB_NAME` | yes | `campusmate` | Database name |
 | `DB_USER` | yes | `campusmate_app` | Database user (not root) |
 | `DB_PASSWORD` | yes | *(your value)* | Database password |
+| `DB_SSL` | no | `false` | Set `true` when the managed database requires TLS |
 | `SESSION_SECRET` | yes | *(random, 32+ chars)* | Signs session cookies |
 | `SESSION_MAX_AGE_HOURS` | no | `8` | Session lifetime |
 | `MAIL_TRANSPORT` | email verification | `console` or `brevo` | `console` prints the verification link to the server console (development only, refused in production); `brevo` sends real email |

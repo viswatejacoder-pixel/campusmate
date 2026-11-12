@@ -4,8 +4,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 import pool from './config/db.js';
+import { env } from './config/env.js';
 import { sessionMiddleware } from './config/session.js';
 import requireJson from './middleware/requireJson.js';
+import securityHeaders from './middleware/securityHeaders.js';
 import authRoutes from './routes/authRoutes.js';
 import subjectRoutes from './routes/subjectRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
@@ -13,6 +15,11 @@ import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
 app.disable('x-powered-by');
+// Opt-in only (F-5): set TRUST_PROXY to the exact number of reverse-proxy hops in front of the app. Left unset, `trust proxy`
+// stays off, so a spoofed X-Forwarded-* header is never believed. It is required behind a TLS-terminating host, otherwise
+// express-session will not send the Secure session cookie (req.secure is false) and req.ip is the proxy for every client.
+if (env.trustProxyHops > 0) app.set('trust proxy', env.trustProxyHops);
+app.use(securityHeaders);
 
 // --- API body rules: a request with a body must be JSON (415); max 10 KB (413); malformed JSON gives 400 ---
 app.use('/api', requireJson, express.json({ limit: '10kb' }));

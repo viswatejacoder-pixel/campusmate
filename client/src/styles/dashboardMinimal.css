@@ -1,0 +1,138 @@
+/* Minimal design mode for the real app (<html data-design="minimal">). Palette and surfaces follow the approved "Rich Minimalism" dashboard preview:
+   warm paper (or near-black), white hairline cards, soft shadows, one indigo accent. It re-points the Vibrant design tokens (--lg-*, --color-*)
+   and restyles the few rules that hard-code colours, so every real component, feature and interaction stays exactly the same.
+   Loaded after liquid.css (see main.jsx). Vibrant mode is the stylesheets as they are, untouched. */
+
+:root[data-design="minimal"] {
+  --lg-text: #1d1d20; --lg-text-2: #3d3c40; --lg-muted: #6c6a65; --lg-faint: #85827b;
+  --lg-blue: #4f5bd5; --lg-blue-ink: #3e49bd; --lg-line: rgba(29, 29, 32, 0.09);
+  --lg-field: #ffffff; --lg-field-line: rgba(29, 29, 32, 0.17); --lg-field-text: #1d1d20;
+  --lg-bg-base: #f6f3ed;
+  --lg-bg: radial-gradient(900px 520px at 88% -8%, rgba(79, 91, 213, 0.11), transparent 62%), radial-gradient(760px 520px at -6% 108%, rgba(217, 150, 38, 0.1), transparent 60%);
+  --lg-side: #fdfcf9; --lg-side-edge: rgba(29, 29, 32, 0.09);
+  --lg-nav-active: #eceefb; --lg-nav-ring: transparent;
+  --lg-search: #ffffff; --lg-chip: #ffffff;
+  --lg-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 1px 2px rgba(29, 29, 32, 0.05), 0 10px 28px -14px rgba(29, 29, 32, 0.15);
+  --lg-panel-tasks: #ffffff; --lg-panel-deadlines: #ffffff; --lg-panel-subjects: #ffffff;
+  --lg-panel-progress: linear-gradient(180deg, #f2f3fd 0%, #ffffff 60%);
+  --lg-panel-edge: rgba(29, 29, 32, 0.09);
+  --lg-panel-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 1px 2px rgba(29, 29, 32, 0.05), 0 10px 28px -14px rgba(29, 29, 32, 0.15);
+  --lg-btn: linear-gradient(180deg, #5a66dd, #4a56cf); --lg-btn-ink: #ffffff; --lg-btn-edge: #4450c6;
+  --lg-btn-glow: 0 1px 2px rgba(34, 42, 130, 0.3), 0 8px 18px -10px rgba(79, 91, 213, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  --lg-ghost: #ffffff; --lg-ghost-edge: rgba(29, 29, 32, 0.16); --lg-ghost-ink: #3d3c40;
+  --lg-soft: #f7f5ef; --lg-soft-edge: rgba(29, 29, 32, 0.1); --lg-soft-ink: #4a4944;
+  --lg-danger: rgba(194, 69, 61, 0.11); --lg-danger-ink: #b23a33;
+  --lg-filter: #fbfaf6;
+  --lg-ring: #4f5bd5; --lg-ring-track: #e8e4db; --lg-ring-text: #1d1d20;
+  --lg-pending: #cfcbc1; --lg-overdue: #c2453d; --lg-bar-track: #e8e4db;
+  --lg-subject-card: #f7f5ef; --lg-subject-ink: #2d2c30;
+  --lg-mint: #eceefb; --lg-mint-edge: rgba(79, 91, 213, 0.3); --lg-mint-ink: #3e49bd;
+  --lg-title-tasks: #1d1d20; --lg-title-progress: #1d1d20;
+  --lg-task-title: #6c6a65; --lg-task-meta: #3d3c40;
+  --color-bg: #f6f3ed; --color-surface: #ffffff; --color-surface-alt: #fbfaf6; --color-text: #1d1d20; --color-text-muted: #6c6a65;
+  --color-border: rgba(29, 29, 32, 0.12); --color-border-strong: rgba(29, 29, 32, 0.26); --color-divider: rgba(29, 29, 32, 0.08);
+  --color-primary: #4f5bd5; --color-primary-hover: #3e49bd; --color-on-primary: #ffffff;
+  --color-primary-tint: rgba(79, 91, 213, 0.1); --color-primary-line: rgba(79, 91, 213, 0.3);
+  --color-brand: #4f5bd5; --color-brand-tint: rgba(79, 91, 213, 0.1); --color-brand-line: rgba(79, 91, 213, 0.4);
+  --glass-fill: #ffffff; --glass-fill-strong: #ffffff; --glass-edge: rgba(29, 29, 32, 0.1);
+  --glass-shadow: 0 1px 2px rgba(29, 29, 32, 0.05), 0 10px 28px -14px rgba(29, 29, 32, 0.15);
+  --mn-red: #b23a33; --mn-red-soft: rgba(194, 69, 61, 0.11); --mn-amber: #8f5b0d; --mn-amber-soft: rgba(217, 150, 38, 0.16); --mn-green: #25744c; --mn-green-soft: rgba(47, 133, 90, 0.13);
+  --mn-accent-soft: rgba(79, 91, 213, 0.1);
+}
+:root[data-design="minimal"][data-theme="dark"] {
+  --lg-text: #f3f2ee; --lg-text-2: #cfcdc8; --lg-muted: #9b9994; --lg-faint: #7f7d78;
+  --lg-blue: #8b95f2; --lg-blue-ink: #aab2f8; --lg-line: rgba(255, 255, 255, 0.08);
+  --lg-field: #151518; --lg-field-line: rgba(255, 255, 255, 0.16); --lg-field-text: #f3f2ee;
+  --lg-bg-base: #111113;
+  --lg-bg: radial-gradient(900px 520px at 88% -8%, rgba(100, 112, 230, 0.16), transparent 62%), radial-gradient(760px 520px at -6% 108%, rgba(230, 170, 70, 0.05), transparent 60%);
+  --lg-side: #151518; --lg-side-edge: rgba(255, 255, 255, 0.08);
+  --lg-nav-active: rgba(139, 149, 242, 0.15); --lg-nav-ring: transparent;
+  --lg-search: #1d1d21; --lg-chip: #1d1d21;
+  --lg-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 1px 2px rgba(0, 0, 0, 0.35), 0 14px 30px -16px rgba(0, 0, 0, 0.7);
+  --lg-panel-tasks: #1d1d21; --lg-panel-deadlines: #1d1d21; --lg-panel-subjects: #1d1d21;
+  --lg-panel-progress: linear-gradient(180deg, #212233 0%, #1d1d21 60%);
+  --lg-panel-edge: rgba(255, 255, 255, 0.08);
+  --lg-panel-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 1px 2px rgba(0, 0, 0, 0.35), 0 14px 30px -16px rgba(0, 0, 0, 0.7);
+  --lg-btn: linear-gradient(180deg, #6a75e8, #5863da); --lg-btn-ink: #ffffff; --lg-btn-edge: #5360d4;
+  --lg-btn-glow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 18px -10px rgba(100, 112, 230, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  --lg-ghost: rgba(255, 255, 255, 0.05); --lg-ghost-edge: rgba(255, 255, 255, 0.16); --lg-ghost-ink: #cfcdc8;
+  --lg-soft: #242429; --lg-soft-edge: rgba(255, 255, 255, 0.1); --lg-soft-ink: #cfcdc8;
+  --lg-danger: rgba(236, 120, 112, 0.15); --lg-danger-ink: #ee8d86;
+  --lg-filter: #18181b;
+  --lg-ring: #8b95f2; --lg-ring-track: #2d2d33; --lg-ring-text: #f3f2ee;
+  --lg-pending: #3a3a42; --lg-overdue: #ee8d86; --lg-bar-track: #2d2d33;
+  --lg-subject-card: #242429; --lg-subject-ink: #e6e4df;
+  --lg-mint: rgba(139, 149, 242, 0.15); --lg-mint-edge: rgba(139, 149, 242, 0.35); --lg-mint-ink: #aab2f8;
+  --lg-title-tasks: #f3f2ee; --lg-title-progress: #f3f2ee;
+  --lg-task-title: #8b8984; --lg-task-meta: #cfcdc8;
+  --color-bg: #111113; --color-surface: #1d1d21; --color-surface-alt: #18181b; --color-text: #f3f2ee; --color-text-muted: #9b9994;
+  --color-border: rgba(255, 255, 255, 0.12); --color-border-strong: rgba(255, 255, 255, 0.28); --color-divider: rgba(255, 255, 255, 0.08);
+  --color-primary: #8b95f2; --color-primary-hover: #aab2f8; --color-on-primary: #11121a;
+  --color-primary-tint: rgba(139, 149, 242, 0.15); --color-primary-line: rgba(139, 149, 242, 0.35);
+  --color-brand: #8b95f2; --color-brand-tint: rgba(139, 149, 242, 0.15); --color-brand-line: rgba(139, 149, 242, 0.45);
+  --glass-fill: #1d1d21; --glass-fill-strong: #1d1d21; --glass-edge: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 14px 30px -16px rgba(0, 0, 0, 0.7);
+  --mn-red: #ee8d86; --mn-red-soft: rgba(236, 120, 112, 0.15); --mn-amber: #e8b660; --mn-amber-soft: rgba(230, 170, 70, 0.15); --mn-green: #72d1a2; --mn-green-soft: rgba(95, 191, 143, 0.15);
+  --mn-accent-soft: rgba(139, 149, 242, 0.15);
+}
+
+/* Page: no colour mesh, no reeded glass, and no blur (flat surfaces read cleaner and cost less to paint). */
+:root[data-design="minimal"] body::after { display: none; }
+:root[data-design="minimal"] .sidebar, :root[data-design="minimal"] .sidebar nav, :root[data-design="minimal"] .search-field input, :root[data-design="minimal"] .confirm-dialog,
+:root[data-design="minimal"] .auth-card, :root[data-design="minimal"] .panel, :root[data-design="minimal"] .summary-card, :root[data-design="minimal"] .account { -webkit-backdrop-filter: none; backdrop-filter: none; }
+:root[data-design="minimal"] .panel--tasks::before, :root[data-design="minimal"] .summary-card::after { display: none; }
+
+/* Sidebar and header. */
+:root[data-design="minimal"] .sidebar { border-radius: 20px; }
+:root[data-design="minimal"] .nav-list a, :root[data-design="minimal"] .nav-bubble { border-radius: 12px; }
+:root[data-design="minimal"] .nav-list a[aria-current="page"], :root[data-design="minimal"][data-theme="dark"] .nav-list a[aria-current="page"] { color: var(--lg-blue-ink); }
+:root[data-design="minimal"] .nav-bubble, :root[data-design="minimal"][data-theme="dark"] .nav-bubble { box-shadow: none; }
+:root[data-design="minimal"] .theme-toggle { border-radius: 12px; background: var(--lg-soft); border-color: var(--lg-line); }
+:root[data-design="minimal"] .theme-option, :root[data-design="minimal"] .theme-option:not(:disabled):hover { border-radius: 9px; }
+:root[data-design="minimal"] .theme-option[aria-pressed="true"], :root[data-design="minimal"][data-theme="dark"] .theme-option[aria-pressed="true"] { color: var(--lg-text); background: var(--lg-field); border-color: var(--lg-line); box-shadow: 0 1px 2px rgba(29, 29, 32, 0.12); }
+:root[data-design="minimal"]:not([data-theme="dark"]) .theme-option[aria-pressed="false"] { background: transparent; }
+:root[data-design="minimal"][data-theme="dark"] .theme-option[aria-pressed="false"] .icon { color: var(--lg-muted); }
+:root[data-design="minimal"] .sidebar .sidebar-logout, :root[data-design="minimal"][data-theme="dark"] .sidebar .sidebar-logout { color: var(--lg-text-2); background: transparent; border: 1px solid var(--lg-field-line); box-shadow: none; border-radius: 12px; }
+:root[data-design="minimal"] .search-field input, :root[data-design="minimal"][data-theme="dark"] .search-field input { border: 1px solid var(--lg-line); border-radius: 14px; }
+:root[data-design="minimal"] .account, :root[data-design="minimal"] .avatar { border-radius: 999px; }
+:root[data-design="minimal"] .avatar, :root[data-design="minimal"][data-theme="dark"] .avatar { color: var(--lg-blue-ink); background: var(--mn-accent-soft); }
+:root[data-design="minimal"] .eyebrow { text-transform: uppercase; }
+/* The logo artwork has dark lettering: on the dark surface it is inverted (hue kept) instead of sitting on a light plate. */
+:root[data-design="minimal"][data-theme="dark"] .brand-logo { background: transparent; box-shadow: none; }
+:root[data-design="minimal"][data-theme="dark"] .brand-logo img { filter: invert(1) hue-rotate(180deg); }
+
+/* Buttons and fields. */
+:root[data-design="minimal"] button, :root[data-design="minimal"] .button-link { border-width: 1px; border-radius: 12px; font-weight: 600; }
+:root[data-design="minimal"] button:not(:disabled):hover, :root[data-design="minimal"] .button-link:hover { filter: brightness(1.06); }
+:root[data-design="minimal"] .button-secondary, :root[data-design="minimal"] .task-toggle { box-shadow: none; }
+:root[data-design="minimal"] .button-secondary:not(:disabled):hover, :root[data-design="minimal"] .task-toggle:not(:disabled):hover { background: var(--lg-soft); filter: none; }
+:root[data-design="minimal"] input, :root[data-design="minimal"] select, :root[data-design="minimal"] textarea { border-radius: 11px; }
+
+/* Summary cards: white, hairline, the colour only in the icon chip and the numbers' captions. */
+:root[data-design="minimal"] .summary-card, :root[data-design="minimal"] .summary-card:first-child { min-height: 8.5rem; border: 1px solid var(--lg-panel-edge); border-radius: 18px; box-shadow: var(--lg-panel-shadow); }
+:root[data-design="minimal"] .summary-card--pending { background: var(--lg-panel-tasks); --tone: var(--lg-blue-ink); --tone-bg: var(--mn-accent-soft); }
+:root[data-design="minimal"] .summary-card--completed { background: var(--lg-panel-tasks); --tone: var(--mn-green); --tone-bg: var(--mn-green-soft); }
+:root[data-design="minimal"] .summary-card--overdue { background: var(--lg-panel-tasks); --tone: var(--mn-red); --tone-bg: var(--mn-red-soft); }
+:root[data-design="minimal"] .summary-card--dueSoon { background: var(--lg-panel-tasks); --tone: var(--mn-amber); --tone-bg: var(--mn-amber-soft); }
+:root[data-design="minimal"][data-theme="dark"] .summary-card, :root[data-design="minimal"][data-theme="dark"] .summary-card:first-child { border: 1px solid var(--lg-panel-edge); box-shadow: var(--lg-panel-shadow); }
+:root[data-design="minimal"][data-theme="dark"] .summary-card--pending, :root[data-design="minimal"][data-theme="dark"] .summary-card--completed,
+:root[data-design="minimal"][data-theme="dark"] .summary-card--overdue, :root[data-design="minimal"][data-theme="dark"] .summary-card--dueSoon { background: var(--lg-panel-tasks); }
+:root[data-design="minimal"][data-theme="dark"] .summary-card--pending { --tone: var(--lg-blue-ink); --tone-bg: var(--mn-accent-soft); }
+:root[data-design="minimal"][data-theme="dark"] .summary-card--completed { --tone: var(--mn-green); --tone-bg: var(--mn-green-soft); }
+:root[data-design="minimal"][data-theme="dark"] .summary-card--overdue { --tone: var(--mn-red); --tone-bg: var(--mn-red-soft); }
+:root[data-design="minimal"][data-theme="dark"] .summary-card--dueSoon { --tone: var(--mn-amber); --tone-bg: var(--mn-amber-soft); }
+:root[data-design="minimal"] .summary-icon { border-radius: 9px; }
+:root[data-design="minimal"] .summary-label, :root[data-design="minimal"][data-theme="dark"] .summary-label { color: var(--lg-muted); }
+:root[data-design="minimal"] .summary-count, :root[data-design="minimal"][data-theme="dark"] .summary-count { color: var(--lg-text); }
+:root[data-design="minimal"] .summary-caption, :root[data-design="minimal"][data-theme="dark"] .summary-caption { color: var(--lg-muted); opacity: 1; }
+
+/* Panels, task list, deadlines, subjects. */
+:root[data-design="minimal"] .panel { border-radius: 20px; }
+:root[data-design="minimal"] .filter-bar, :root[data-design="minimal"][data-theme="dark"] .filter-bar { border-color: var(--lg-line); border-radius: 14px; }
+:root[data-design="minimal"] .task-item .task-actions .button-danger, :root[data-design="minimal"][data-theme="dark"] .task-item .task-actions .button-danger { color: var(--lg-danger-ink); background: var(--lg-danger); }
+:root[data-design="minimal"] .task-flag--overdue { color: var(--mn-red); background: var(--mn-red-soft); }
+:root[data-design="minimal"] .task-flag--due-soon { color: var(--mn-amber); background: var(--mn-amber-soft); }
+:root[data-design="minimal"] .deadline-tile { color: var(--lg-text-2); background: var(--lg-soft); border-radius: 12px; }
+:root[data-design="minimal"] .deadline-tile--soon { color: var(--mn-amber); background: var(--mn-amber-soft); }
+:root[data-design="minimal"] .empty-state { border-radius: 14px; }
+:root[data-design="minimal"] .confirm-dialog { border-radius: 20px; }

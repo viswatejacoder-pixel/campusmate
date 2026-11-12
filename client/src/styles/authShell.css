@@ -1,0 +1,23 @@
+/* Auth shell: /login and /register share one stage; a page change or a Minimal/Vibrant change is a short crossfade with a little sideways
+   movement (--as-dir is +1 or -1). The leaving page stays opaque for the first third so two opaque pages never show the backdrop. */
+.as-stage { position: fixed; inset: 0; overflow: hidden; }
+.as-layer { position: fixed; inset: 0; overflow-x: hidden; overflow-y: auto; }
+.as-layer--vibrant { padding-bottom: 72px; }
+
+.as-layer.as-enter { animation: as-in 340ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
+.as-layer.as-leave { pointer-events: none; animation: as-out 340ms cubic-bezier(0.4, 0, 0.6, 1) both; }
+@keyframes as-in {
+  from { opacity: 0; transform: translate3d(calc(var(--as-dir, 1) * 28px), 0, 0); }
+}
+@keyframes as-out {
+  0%, 30% { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translate3d(calc(var(--as-dir, 1) * -16px), 0, 0); }
+}
+
+/* Stacked (tablet and mobile) layouts: keep the mode switch clear of the last line of content. */
+@media (max-width: 899px) {
+  .as-layer .ml-shell, .as-layer .rg-shell { padding-bottom: 60px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .as-layer.as-enter, .as-layer.as-leave { animation: none; }
+}

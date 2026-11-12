@@ -8,6 +8,7 @@ const pool = mysql.createPool({
   user: env.db.user,
   password: env.db.password,
   database: env.db.name,
+  ...(env.db.ssl ? { ssl: { rejectUnauthorized: true } } : {}),
   dateStrings: true, // DATE columns come back as "YYYY-MM-DD" strings (no timezone shifts)
   waitForConnections: true,
   connectionLimit: 10,

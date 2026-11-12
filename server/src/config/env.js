@@ -27,7 +27,9 @@ if (missing.length > 0) {
   if (e.SESSION_SECRET.length < 32) problems.push('SESSION_SECRET must be at least 32 characters');
   if (e.SESSION_SECRET.startsWith('replace_with')) problems.push('SESSION_SECRET is still the template placeholder');
   if (e.DB_PASSWORD.startsWith('change_me')) problems.push('DB_PASSWORD is still the template placeholder');
+  if (e.DB_SSL !== undefined && !['true', 'false'].includes(e.DB_SSL.trim().toLowerCase())) problems.push("DB_SSL must be 'true' or 'false'");
   if (!(Number(e.SESSION_MAX_AGE_HOURS) > 0)) problems.push('SESSION_MAX_AGE_HOURS must be a positive number');
+  if (e.TRUST_PROXY !== undefined && e.TRUST_PROXY !== '' && !/^[1-9]\d?$/.test(e.TRUST_PROXY.trim())) problems.push('TRUST_PROXY must be a whole number of trusted proxy hops (1 to 99) or unset');
   const transport = e.MAIL_TRANSPORT || 'console';
   if (!['console', 'brevo'].includes(transport)) problems.push("MAIL_TRANSPORT must be 'console' or 'brevo'");
   if (transport === 'console' && e.NODE_ENV === 'production') problems.push('MAIL_TRANSPORT=console is not allowed when NODE_ENV=production');
@@ -58,9 +60,12 @@ export const env = Object.freeze({
     name: e.DB_NAME,
     user: e.DB_USER,
     password: e.DB_PASSWORD,
+    ssl: (e.DB_SSL || 'false').trim().toLowerCase() === 'true',
   }),
   sessionSecret: e.SESSION_SECRET,
   sessionMaxAgeMs: Number(e.SESSION_MAX_AGE_HOURS) * 60 * 60 * 1000,
+  // Opt-in number of trusted reverse-proxy hops (F-5). 0 = unset = `trust proxy` stays off (the default).
+  trustProxyHops: e.TRUST_PROXY && e.TRUST_PROXY.trim() ? Number(e.TRUST_PROXY.trim()) : 0,
   // Email verification (T-075). Defaults to the development-only console transport; secrets are never printed.
   mail: Object.freeze({
     transport: e.MAIL_TRANSPORT || 'console',

@@ -56,8 +56,6 @@ label { font-size: 0.8125rem; font-weight: 600; color: var(--color-text); }
 /* ---------- Sidebar and mobile tab bar ---------- */
 .sidebar { background: transparent; border: 0; box-shadow: none; }
 .brand { font-size: 1.2rem; }
-.brand-mark { border-radius: 10px; background: var(--color-primary); box-shadow: var(--shadow-sm); }
-.brand-mark .icon { stroke-width: 2.5; }
 .nav-list a { gap: 0.7rem; color: var(--color-text-muted); border-radius: var(--radius-md); }
 .nav-list a .icon { transition: transform var(--dur) var(--ease), color var(--dur) var(--ease); }
 .nav-list a:hover { background: color-mix(in srgb, var(--color-text) 5%, transparent); color: var(--color-text); }
@@ -150,7 +148,7 @@ label { font-size: 0.8125rem; font-weight: 600; color: var(--color-text); }
 .task-item .task-toggle, .task-item .button-danger { min-height: 2.25rem; padding: 0.25rem 0.9rem; font-size: 0.8125rem; }
 .task-item .button-danger { color: var(--color-danger); background: var(--color-danger-bg); box-shadow: none; }
 .task-item .button-danger:not(:disabled):hover { color: #fff; background: var(--color-danger); }
-@media (hover: hover) { .task-actions { opacity: 0.55; } .task-item:hover .task-actions, .task-item:focus-within .task-actions { opacity: 1; } }
+/* T-100 F-4: action buttons are no longer dimmed at rest (opacity 0.55 gave about 1.9 to 2.5 to 1 contrast) */
 @media (hover: hover) and (prefers-reduced-motion: no-preference) { .task-actions { transition: opacity var(--dur) var(--ease); } }
 .task-more .button-secondary { border-width: 1px; }
 
@@ -220,6 +218,5 @@ label { font-size: 0.8125rem; font-weight: 600; color: var(--color-text); }
   .confirm-dialog[open] { animation: pop 0.22s var(--ease) both; }
   .ring-segment { animation: ring-draw 0.9s var(--ease) 0.3s both; }
   .legend-bar > span { transform-origin: left; animation: bar-grow 0.8s var(--ease) 0.4s both; }
-  .brand-mark { transition: transform var(--dur) var(--ease); } .brand:hover .brand-mark { transform: rotate(-6deg) scale(1.05); }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
