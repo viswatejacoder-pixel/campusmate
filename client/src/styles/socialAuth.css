@@ -1,3 +1,5 @@
 .social-auth { display: grid; gap: 0.65rem; margin-top: 1.25rem; }
-.social-auth button { min-height: 2.75rem; }
+.social-auth button { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.5rem; min-height: 2.75rem; }
 .social-auth button[aria-busy="true"] { cursor: progress; }
+.social-auth button:disabled { cursor: not-allowed; opacity: 0.72; }
+.social-auth-badge { padding: 0.15rem 0.5rem; color: currentColor; background: color-mix(in srgb, currentColor 12%, transparent); border-radius: 999px; font-size: 0.72em; font-weight: 600; line-height: 1.35; white-space: nowrap; }

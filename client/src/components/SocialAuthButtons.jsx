@@ -15,8 +15,9 @@ export default function SocialAuthButtons() {
       <button type="button" disabled={Boolean(loading)} aria-busy={loading === 'google'} onClick={() => start('google')}>
         {loading === 'google' ? 'Connecting to Google...' : 'Continue with Google'}
       </button>
-      <button type="button" disabled={Boolean(loading)} aria-busy={loading === 'apple'} onClick={() => start('apple')}>
-        {loading === 'apple' ? 'Connecting to Apple...' : 'Continue with Apple'}
+      <button type="button" disabled aria-disabled="true" aria-label="Continue with Apple - Coming Soon">
+        <span>Continue with Apple</span>
+        <span className="social-auth-badge">Coming Soon</span>
       </button>
     </div>
   );

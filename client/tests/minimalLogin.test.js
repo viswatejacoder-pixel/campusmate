@@ -45,6 +45,8 @@ test('Minimal login renders the real form with the same links and autofill hints
   assert.match(html, /<h1[^>]*>Welcome back<\/h1>/);
   assert.match(html, /Continue with Google/);
   assert.match(html, /Continue with Apple/);
+  assert.match(html, /<button[^>]*disabled=""[^>]*aria-disabled="true"[^>]*aria-label="Continue with Apple - Coming Soon"[\s\S]*Coming Soon[\s\S]*<\/button>/);
+  assert.match(html, /<button[^>]*>[\s\S]*Continue with Google[\s\S]*<\/button>/);
   assert.doesNotMatch(html, /href="[^"]*(oauth|google|apple)/i); // no invented provider endpoints
   assert.match(html, /id="ml-email"[^>]*autoComplete="username"|autoComplete="username"[^>]*id="ml-email"|autocomplete="username"/i);
   assert.match(html, /autocomplete="current-password"/i);

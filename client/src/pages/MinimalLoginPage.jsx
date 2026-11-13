@@ -293,9 +293,10 @@ export default function MinimalLoginPage() {
                 <GoogleIcon />
                 <span>{submitting ? 'Connecting...' : 'Continue with Google'}</span>
               </button>
-              <button type="button" className="ml-provider" disabled={submitting} aria-busy={submitting} onClick={() => startProvider('apple')}>
+              <button type="button" className="ml-provider" disabled aria-disabled="true" aria-label="Continue with Apple - Coming Soon">
                 <AppleIcon />
-                <span>{submitting ? 'Connecting...' : 'Continue with Apple'}</span>
+                <span>Continue with Apple</span>
+                <span className="ml-soon">Coming Soon</span>
               </button>
             </div>
             <div role="status" className="ml-notice-wrap">
