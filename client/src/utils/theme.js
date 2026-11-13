@@ -1,6 +1,7 @@
 // Colour theme (T-095 Liquid Glass): "light" or "dark", kept on <html data-theme>. The choice is remembered in localStorage;
-// without one, the system setting decides. Safe to import where there is no window (static render in the tests).
+// without one, the light theme is used. Safe to import where there is no window (static render in the tests).
 const KEY = 'campusmate-theme';
+export const DEFAULT_THEME = 'light';
 const valid = (value) => (value === 'light' || value === 'dark' ? value : null);
 
 export function getStoredTheme() {
@@ -35,5 +36,5 @@ export function applyTheme(theme, remember = true) {
 }
 
 export function initTheme() {
-  applyTheme(getStoredTheme() || systemTheme(), false);
+  applyTheme(getStoredTheme() || DEFAULT_THEME, false);
 }

@@ -51,12 +51,12 @@ afterEach(() => {
   else globalThis.document = realDocument;
 });
 
-test('default mode is Vibrant (only when nothing valid is saved or in the URL); modes and storage key are fixed', () => {
+test('default mode is Minimal (only when nothing valid is saved or in the URL); modes and storage key are fixed', () => {
   env();
-  assert.equal(ctx.DEFAULT_DESIGN_MODE, 'vibrant');
+  assert.equal(ctx.DEFAULT_DESIGN_MODE, 'minimal');
   assert.deepEqual(ctx.DESIGN_MODES, ['minimal', 'vibrant']);
   assert.equal(ctx.DESIGN_MODE_KEY, 'cm-design-mode');
-  assert.equal(ctx.initialDesignMode(), 'vibrant');
+  assert.equal(ctx.initialDesignMode(), 'minimal');
 });
 
 test('normalizeDesignMode accepts only the two exact names', () => {
@@ -73,9 +73,9 @@ test('stored choice persists; invalid stored value falls back to the default', (
   env({ stored: 'minimal' });
   assert.equal(ctx.initialDesignMode(), 'minimal');
   env({ stored: '<script>' });
-  assert.equal(ctx.initialDesignMode(), 'vibrant');
+  assert.equal(ctx.initialDesignMode(), 'minimal');
   env({ storageThrows: true });
-  assert.equal(ctx.initialDesignMode(), 'vibrant');
+  assert.equal(ctx.initialDesignMode(), 'minimal');
 });
 
 test('URL ?mode wins over storage; an invalid URL value is ignored', () => {
@@ -86,9 +86,9 @@ test('URL ?mode wins over storage; an invalid URL value is ignored', () => {
   env({ search: '?mode=neon', stored: 'vibrant' });
   assert.equal(ctx.initialDesignMode(), 'vibrant');
   env({ search: '?mode=', stored: undefined });
-  assert.equal(ctx.initialDesignMode(), 'vibrant');
+  assert.equal(ctx.initialDesignMode(), 'minimal');
   env({ search: '?mode=minimal%00&x=1' });
-  assert.equal(ctx.initialDesignMode(), 'vibrant');
+  assert.equal(ctx.initialDesignMode(), 'minimal');
   env({ search: '?mode=neon', stored: 'minimal' });
   assert.equal(ctx.initialDesignMode(), 'minimal');
   env({ search: '?mode=vibrant', storageThrows: true });
@@ -100,8 +100,8 @@ test('initDesignMode mirrors the mode on <html data-design> and never writes sto
   assert.equal(ctx.initDesignMode(), 'vibrant');
   assert.equal(globalThis.document.documentElement.dataset.design, 'vibrant');
   env();
-  assert.equal(ctx.initDesignMode(), 'vibrant');
-  assert.equal(globalThis.document.documentElement.dataset.design, 'vibrant');
+  assert.equal(ctx.initDesignMode(), 'minimal');
+  assert.equal(globalThis.document.documentElement.dataset.design, 'minimal');
   assert.equal(store.get(ctx.DESIGN_MODE_KEY), 'vibrant');
 });
 
@@ -187,15 +187,15 @@ test('Minimal register follows the global theme like Minimal login (no fixed lig
   assert.ok(/:root\[data-theme="dark"\] \.ml-root/.test(read('../src/styles/minimalLogin.css')));
 });
 
-test('dashboard switch: both modes shown, pressed follows the context (default Vibrant, saved Minimal kept)', async () => {
+test('dashboard switch: both modes shown, pressed follows the context (default Minimal, saved choice kept)', async () => {
   const Toggle = (await server.ssrLoadModule('/src/components/DesignModeToggle.jsx')).default;
   const html = (stored) => { env({ stored }); return renderToStaticMarkup(h(ctx.DesignModeProvider, null, h(Toggle))); };
   const pressed = (s) => [...s.matchAll(/aria-pressed="true"[^>]*><span[^>]*>([^<]+)</g)].map((m) => m[1]);
   assert.ok(html().includes('aria-label="Design mode"'));
-  assert.deepEqual(pressed(html()), ['Vibrant']);
+  assert.deepEqual(pressed(html()), ['Minimal']);
   assert.deepEqual(pressed(html('minimal')), ['Minimal']);
   assert.deepEqual(pressed(html('vibrant')), ['Vibrant']);
-  assert.deepEqual(pressed(html('bogus')), ['Vibrant']);
+  assert.deepEqual(pressed(html('bogus')), ['Minimal']);
   assert.equal((html().match(/<button/g) || []).length, 2);
 });
 

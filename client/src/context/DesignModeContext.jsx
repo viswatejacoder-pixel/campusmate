@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 // Stored under one localStorage key (a mode name, nothing else) and mirrored on <html data-design> so CSS can follow it.
 export const DESIGN_MODE_KEY = 'cm-design-mode';
 export const DESIGN_MODES = ['minimal', 'vibrant'];
-export const DEFAULT_DESIGN_MODE = 'vibrant'; // used only when there is neither a valid URL mode nor a valid saved choice
+export const DEFAULT_DESIGN_MODE = 'minimal'; // used only when there is neither a valid URL mode nor a valid saved choice
 
 // Only the two known names are ever accepted, whatever the source (URL, storage, a prop).
 export const normalizeDesignMode = (value) => (DESIGN_MODES.includes(value) ? value : null);
