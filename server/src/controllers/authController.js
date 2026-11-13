@@ -20,7 +20,7 @@ const destroySession = (req) =>
   new Promise((resolve, reject) => req.session.destroy((err) => (err ? reject(err) : resolve())));
 
 // A new session id on every login/register defeats session fixation (security.md S-4).
-async function startSession(req, userId) {
+export async function startSession(req, userId) {
   await regenerateSession(req);
   req.session.userId = userId;
   await saveSession(req); // written to MySQL before the response, so the cookie works immediately

@@ -72,11 +72,26 @@ For the database, provision a separate MySQL-compatible managed instance and set
 | `MAIL_TRANSPORT` | email verification | `console` or `brevo` | `console` prints the verification link to the server console (development only, refused in production); `brevo` sends real email |
 | `APP_BASE_URL` | email verification | `http://localhost:5173` | Client base URL used in the emailed link |
 | `MAIL_FROM_EMAIL`, `MAIL_FROM_NAME`, `BREVO_API_KEY` | only for `brevo` | *(your values)* | Sender verified in Brevo and the Brevo API key |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | Google sign-in | *(your values)* | Server-only OIDC configuration |
+| `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY`, `APPLE_REDIRECT_URI` | Apple sign-in | *(your values)* | Server-only Sign in with Apple configuration |
 | `RATE_LIMIT_DISABLED` | no | *(empty)* | Test servers only (ignored in production): `true` switches rate limiting off |
 
 **Brevo (real email):** the public IP of the machine running the server must be on Brevo's authorised IP list, otherwise the Brevo API rejects the request; if your IP changes, authorise the new one. Brevo Transactional Logs show a sent email only after a delay.
 
 The server must refuse to start if a required variable is missing. Real values live only in `server/.env`, which is git-ignored. The client needs no environment variables, and nothing secret may ever be put in a `VITE_` variable because those end up in the browser bundle.
+
+### Social sign-in provider setup
+
+Set these exact HTTPS callback URLs in the provider dashboards:
+
+- Google: `https://YOUR_RENDER_HOST/api/auth/google/callback`
+- Apple: `https://YOUR_RENDER_HOST/api/auth/apple/callback`
+
+In Google Cloud Console, create an OAuth 2.0 Web application client, add the callback URL as an authorized redirect URI, and provide its client ID and client secret.
+
+In Apple Developer, create a Services ID for the web client, associate it with a Sign in with Apple configuration and the verified HTTPS domain, add the callback URL, then create a Sign in with Apple key. Provide the Services ID, Team ID, key ID, and downloaded private key contents (with newlines preserved or represented as `\n`). The Apple client ID is the Services ID, not the native bundle ID.
+
+Apply [`server/sql/migrations/003_oauth_accounts.sql`](server/sql/migrations/003_oauth_accounts.sql) once before enabling either provider. It creates only the provider-identity table; it does not modify or link existing users.
 
 ## Scripts (PLANNED)
 `server`: `npm start` run API | `npm run dev` run with auto-restart (`node --watch`)

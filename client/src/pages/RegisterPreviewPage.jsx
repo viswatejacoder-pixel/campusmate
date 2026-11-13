@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import '../styles/registerPreview.css';
+import SocialAuthButtons from '../components/SocialAuthButtons.jsx';
 
 // Design experiment (isolated, preview only) at /register-preview. Same fields, labels, rules and auth call as RegisterPage.
 // RegisterPage does not export its validator, so this mirrors it (and authValidator.validateRegister). The server stays the authority.
@@ -183,6 +184,7 @@ export default function RegisterPreviewPage() {
                 {submitting ? 'Creating account...' : 'Register'}
               </button>
             </form>
+            <SocialAuthButtons />
 
             <p className="rg-foot">
               Already registered?{' '}

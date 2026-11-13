@@ -1,6 +1,8 @@
 // All SQL for the users table. Parameterized only (`?` placeholders with execute()); no string-built SQL (S-2).
 // Verification tokens are never stored: only their SHA-256 hash (T-075). Times use the database clock (NOW()), so there is no JS/DB timezone mismatch.
 import pool from '../config/db.js';
+import { randomBytes } from 'node:crypto';
+import bcrypt from 'bcryptjs';
 import { TOKEN_TTL_MINUTES, RESEND_COOLDOWN_SECONDS, RESET_TTL_MINUTES, RESET_COOLDOWN_SECONDS } from '../utils/tokens.js';
 
 const TTL = String(TOKEN_TTL_MINUTES);
@@ -30,6 +32,38 @@ export async function findByEmail(email) {
 export async function findById(id) {
   const [rows] = await pool.execute('SELECT id, name, email FROM users WHERE id = ? LIMIT 1', [id]);
   return rows[0] || null;
+}
+
+export async function findByOAuthIdentity(provider, subject) {
+  const [rows] = await pool.execute(
+    `SELECT u.id, u.name, u.email FROM oauth_accounts oa
+       JOIN users u ON u.id = oa.user_id
+      WHERE oa.provider = ? AND oa.subject = ? LIMIT 1`,
+    [provider, subject],
+  );
+  return rows[0] || null;
+}
+
+export async function createOAuthUser({ provider, subject, name, email }) {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [userResult] = await conn.execute(
+      `INSERT INTO users (name, email, password_hash, email_verified_at) VALUES (?, ?, ?, NOW())`,
+      [name, email, await bcrypt.hash(`oauth:${randomBytes(32).toString('hex')}`, 12)],
+    );
+    await conn.execute(
+      `INSERT INTO oauth_accounts (provider, subject, user_id) VALUES (?, ?, ?)`,
+      [provider, subject, userResult.insertId],
+    );
+    await conn.commit();
+    return { id: userResult.insertId, name, email };
+  } catch (err) {
+    await conn.rollback().catch(() => {});
+    throw err;
+  } finally {
+    conn.release();
+  }
 }
 
 // Re-registration of a still-unverified email: replaces name, password and token. Atomic, and skipped (returns false) when the

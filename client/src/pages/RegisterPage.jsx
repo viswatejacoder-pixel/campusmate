@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import FormField from '../components/FormField.jsx';
+import SocialAuthButtons from '../components/SocialAuthButtons.jsx';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // same pattern as the server (authValidator.js)
 
@@ -84,6 +85,7 @@ export default function RegisterPage() {
           {submitting ? 'Creating account...' : 'Register'}
         </button>
       </form>
+      <SocialAuthButtons />
       <p>
         Already registered? <Link to="/login">Log in</Link>
       </p>

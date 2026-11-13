@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import '../styles/minimalLogin.css';
 
@@ -149,13 +149,18 @@ export default function MinimalLoginPage() {
   const [unverified, setUnverified] = useState(false); // correct password but email not verified yet
   const [submitting, setSubmitting] = useState(false);
   const [providerNote, setProviderNote] = useState('');
+  const [searchParams] = useSearchParams();
 
   // Already logged in (or just logged in): the redirect is the success behaviour.
   if (status === 'authenticated') return <Navigate to="/dashboard" replace />;
 
   const clearFieldError = (name) => setFieldErrors((prev) => ({ ...prev, [name]: undefined }));
-  // Google/Apple sign-in has no backend yet (no OAuth routes or credentials), so these never sign anyone in.
-  const providerUnavailable = (name) => setProviderNote(`${name} sign-in isn't available yet. Please use your email and password.`);
+  function startProvider(provider) {
+    if (submitting) return;
+    setProviderNote('');
+    setSubmitting(true);
+    window.location.assign(`/api/auth/${provider}/start`);
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -214,6 +219,7 @@ export default function MinimalLoginPage() {
                 )}
               </p>
             )}
+            {searchParams.get('oauth_error') && <p role="alert" className="ml-alert">Sign-in could not be completed. Please try again or use your email and password.</p>}
 
             <form onSubmit={handleSubmit} noValidate>
               <div className="ml-field">
@@ -283,15 +289,13 @@ export default function MinimalLoginPage() {
             </div>
 
             <div className="ml-social">
-              <button type="button" className="ml-provider" onClick={() => providerUnavailable('Google')}>
+              <button type="button" className="ml-provider" disabled={submitting} aria-busy={submitting} onClick={() => startProvider('google')}>
                 <GoogleIcon />
-                <span>Continue with Google</span>
-                <span className="ml-soon">Soon</span>
+                <span>{submitting ? 'Connecting...' : 'Continue with Google'}</span>
               </button>
-              <button type="button" className="ml-provider" onClick={() => providerUnavailable('Apple')}>
+              <button type="button" className="ml-provider" disabled={submitting} aria-busy={submitting} onClick={() => startProvider('apple')}>
                 <AppleIcon />
-                <span>Continue with Apple</span>
-                <span className="ml-soon">Soon</span>
+                <span>{submitting ? 'Connecting...' : 'Continue with Apple'}</span>
               </button>
             </div>
             <div role="status" className="ml-notice-wrap">

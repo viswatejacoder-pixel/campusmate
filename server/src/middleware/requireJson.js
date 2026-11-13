@@ -4,6 +4,8 @@
 import AppError from '../utils/AppError.js';
 
 export default function requireJson(req, res, next) {
+  // Sign in with Apple uses an application/x-www-form-urlencoded form_post callback.
+  if (req.method === 'POST' && req.path === '/auth/apple/callback') return next();
   const length = req.headers['content-length'];
   const hasBody = req.headers['transfer-encoding'] !== undefined || (length !== undefined && Number(length) > 0);
   if (hasBody && !req.is('application/json')) {

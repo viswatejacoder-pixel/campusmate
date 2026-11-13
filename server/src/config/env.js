@@ -38,6 +38,18 @@ if (missing.length > 0) {
       if (!e[n] || !e[n].trim()) problems.push(`${n} is required when MAIL_TRANSPORT=brevo`);
     }
   }
+  const oauthGroups = [
+    ['Google', ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REDIRECT_URI']],
+    ['Apple', ['APPLE_CLIENT_ID', 'APPLE_TEAM_ID', 'APPLE_KEY_ID', 'APPLE_PRIVATE_KEY', 'APPLE_REDIRECT_URI']],
+  ];
+  for (const [label, names] of oauthGroups) {
+    const present = names.filter((name) => e[name] && e[name].trim()).length;
+    if (present > 0 && present < names.length) problems.push(`${label} OAuth configuration must provide all of: ${names.join(', ')}`);
+    const redirect = e[names[names.length - 1]];
+    if (present === names.length && e.NODE_ENV === 'production' && !redirect.trim().toLowerCase().startsWith('https://')) {
+      problems.push(`${label} OAuth redirect URI must use HTTPS in production`);
+    }
+  }
   if (e.APP_BASE_URL && !/^https?:\/\/[^\s/]+$/.test(e.APP_BASE_URL.trim().replace(/\/+$/, ''))) problems.push('APP_BASE_URL must look like http://localhost:5173 (no path)');
   if (e.MAIL_FROM_EMAIL && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.MAIL_FROM_EMAIL.trim())) problems.push('MAIL_FROM_EMAIL must be an email address');
 }
@@ -73,6 +85,20 @@ export const env = Object.freeze({
     fromEmail: (e.MAIL_FROM_EMAIL || '').trim(),
     fromName: (e.MAIL_FROM_NAME || 'CampusMate').trim(),
     brevoApiKey: e.BREVO_API_KEY || '',
+  }),
+  oauth: Object.freeze({
+    google: Object.freeze({
+      clientId: (e.GOOGLE_CLIENT_ID || '').trim(),
+      clientSecret: (e.GOOGLE_CLIENT_SECRET || '').trim(),
+      redirectUri: (e.GOOGLE_REDIRECT_URI || '').trim(),
+    }),
+    apple: Object.freeze({
+      clientId: (e.APPLE_CLIENT_ID || '').trim(),
+      teamId: (e.APPLE_TEAM_ID || '').trim(),
+      keyId: (e.APPLE_KEY_ID || '').trim(),
+      privateKey: e.APPLE_PRIVATE_KEY || '',
+      redirectUri: (e.APPLE_REDIRECT_URI || '').trim(),
+    }),
   }),
   // Test-server switch for the rate limiter; ignored in production.
   rateLimitDisabled: (e.NODE_ENV || 'development') !== 'production' && e.RATE_LIMIT_DISABLED === 'true',

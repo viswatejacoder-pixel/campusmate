@@ -2,6 +2,7 @@
 import { Router } from 'express';
 import requireAuth from '../middleware/requireAuth.js';
 import { register, login, logout, me, verifyEmail, resendVerification, forgotPassword, resetPassword } from '../controllers/authController.js';
+import { appleBody, callback as oauthCallback, start as oauthStart } from '../controllers/oauthController.js';
 import { env } from '../config/env.js';
 import { createRateLimiter, emailKey } from '../middleware/rateLimit.js';
 
@@ -13,6 +14,10 @@ const limit = (opts) => (env.rateLimitDisabled ? (req, res, next) => next() : cr
 
 router.post('/register', limit({ windowMs: 60 * MIN, max: 10 }), register);
 router.post('/login', limit({ windowMs: 15 * MIN, max: 10 }), login);
+router.get('/google/start', oauthStart('google'));
+router.get('/google/callback', oauthCallback('google'));
+router.get('/apple/start', oauthStart('apple'));
+router.post('/apple/callback', appleBody, oauthCallback('apple'));
 router.post('/verify-email', limit({ windowMs: 15 * MIN, max: 10 }), verifyEmail);
 router.post(
   '/resend-verification',
