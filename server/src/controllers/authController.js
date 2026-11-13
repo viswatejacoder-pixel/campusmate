@@ -41,12 +41,22 @@ const RESEND_MESSAGE = 'If an unverified account exists for this email, a new ve
 const INVALID_TOKEN = () =>
   new AppError(400, 'TOKEN_INVALID_OR_EXPIRED', 'This verification link is invalid, expired, or already used.');
 
-// A mail failure must not fail the request or leak details: log only a short code; the user can use "resend".
+// Resend/reset remain deliberately generic, but registration must not claim delivery when the provider fails.
 async function sendSafely(to, name, token) {
   try {
     await sendVerificationEmail({ to, name, token });
   } catch (err) {
     console.error(`Verification email failed (${err.code || err.name || 'UNKNOWN'})`);
+  }
+}
+
+async function sendRegistrationEmail(to, name, token) {
+  try {
+    await sendVerificationEmail({ to, name, token });
+  } catch (err) {
+    const code = err.code || err.name || 'UNKNOWN';
+    console.error(`Verification email delivery failed (code=${code})`);
+    throw new AppError(503, 'EMAIL_DELIVERY_FAILED', 'Your account was created, but we could not send the verification email. Please try again later.');
   }
 }
 
@@ -75,7 +85,7 @@ export async function register(req, res) {
     }
   }
 
-  if (sendMail) await sendSafely(value.email, value.name, token);
+  if (sendMail) await sendRegistrationEmail(value.email, value.name, token);
   res.status(201).json({ message: REGISTERED_MESSAGE });
 }
 

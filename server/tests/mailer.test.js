@@ -51,7 +51,7 @@ test('M-02 brevo: a non-2xx answer rejects with a short code that does not conta
   }
 });
 
-test('M-03 brevo: network failures and timeouts propagate (the controller logs only a code and carries on)', async () => {
+test('M-03 brevo: network failures and timeouts propagate for the controller to handle safely', async () => {
   const down = async () => { throw new TypeError('fetch failed'); };
   await assert.rejects(createMailer(brevo, down).sendVerificationEmail({ to: 'u@example.test', name: 'U', token: TOKEN }), TypeError);
 });
