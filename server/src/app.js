@@ -11,6 +11,7 @@ import securityHeaders from './middleware/securityHeaders.js';
 import authRoutes from './routes/authRoutes.js';
 import subjectRoutes from './routes/subjectRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -45,6 +46,7 @@ app.use('/api', sessionMiddleware);
 app.use('/api/auth', authRoutes);
 app.use('/api/subjects', subjectRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Unknown /api paths always get a JSON 404, never the client's index.html.
 app.use('/api', notFound);

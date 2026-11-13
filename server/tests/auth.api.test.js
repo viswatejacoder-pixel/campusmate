@@ -1,5 +1,5 @@
 // Scripted checks for AUTH-01 to AUTH-10 (docs/TESTING.md). Uses only node:test and fetch (D-018).
-// Run against a running server:  BASE_URL=http://localhost:3001 node --test tests/auth.api.test.js
+// Run against a running server:  BASE_URL=http://localhost:3000 node --test tests/auth.api.test.js
 // Creates fake accounts t030-<run>-<tag>@example.test in the LOCAL development database. It deletes nothing;
 // at the end it prints the exact accounts it created and the SQL to remove only those accounts.
 // Never prints passwords, cookie values, or full password hashes.
@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import bcrypt from 'bcryptjs';
 import pool from '../src/config/db.js';
 
-const BASE = process.env.BASE_URL || 'http://localhost:3001';
+const BASE = process.env.BASE_URL || 'http://localhost:3000';
 const RUN = `${Date.now()}`;
 const PREFIX = `t030-${RUN}-`;
 const PASSWORD = 'Test-Pass-1234'; // fake, test-only

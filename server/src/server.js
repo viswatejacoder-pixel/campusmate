@@ -1,9 +1,11 @@
 // Entry point: validates env (via config/env.js), then starts listening.
 import { env } from './config/env.js';
 import app from './app.js';
+import { startReminderWorker } from './services/notificationService.js';
 
 const server = app.listen(env.port, () => {
   console.log(`CampusMate API listening on http://localhost:${env.port} (${env.nodeEnv})`);
+  startReminderWorker();
 });
 
 server.on('error', (err) => {

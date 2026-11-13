@@ -1,5 +1,5 @@
 // T-075 email-verification API checks. Needs a server started from this code with RATE_LIMIT_DISABLED=true and MAIL_TRANSPORT=console
-// (BASE_URL, default http://localhost:3001). Accounts use the t075- prefix; nothing is deleted (cleanup SQL is printed at the end).
+// (BASE_URL, default http://localhost:3000). Accounts use the t075- prefix; nothing is deleted (cleanup SQL is printed at the end).
 // The raw token is never stored, so tests plant a token of their own (hash only) and then use the real endpoints.
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -7,7 +7,7 @@ import bcrypt from 'bcryptjs';
 import pool from '../src/config/db.js';
 import { generateToken, hashToken, TOKEN_RE } from '../src/utils/tokens.js';
 
-const BASE = process.env.BASE_URL || 'http://localhost:3001';
+const BASE = process.env.BASE_URL || 'http://localhost:3000';
 const PREFIX = `t075-${Date.now()}-`;
 const PASSWORD = 'Test-Pass-1234'; // fake, test-only
 const mk = (tag) => `${PREFIX}${tag}@example.test`;

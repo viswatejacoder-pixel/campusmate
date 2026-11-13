@@ -1,5 +1,5 @@
 // Password-reset API checks. REQUIRES migrations/002_password_reset.sql to be applied, and a server started from this code with
-// RATE_LIMIT_DISABLED=true and MAIL_TRANSPORT=console (BASE_URL, default http://localhost:3001). Only 3 accounts are created (prefix pr-);
+// RATE_LIMIT_DISABLED=true and MAIL_TRANSPORT=console (BASE_URL, default http://localhost:3000). Only 3 accounts are created (prefix pr-);
 // nothing is deleted (cleanup SQL is printed at the end). The raw token is never stored, so tests plant a token of their own (hash only).
 // The rate-limit case runs only with EXPECT_RATE_LIMIT=1 against a server that has the limiter ENABLED (BASE_URL, e.g. http://localhost:3002).
 import { test, after } from 'node:test';
@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import pool from '../src/config/db.js';
 import { generateToken, hashToken } from '../src/utils/tokens.js';
 
-const BASE = process.env.BASE_URL || 'http://localhost:3001';
+const BASE = process.env.BASE_URL || 'http://localhost:3000';
 const PREFIX = `pr-${Date.now()}-`;
 const OLD = 'Old-Pass-1234'; // fake, test-only
 const NEW = 'New-Pass-5678'; // fake, test-only

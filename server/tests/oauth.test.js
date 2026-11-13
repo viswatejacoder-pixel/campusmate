@@ -75,6 +75,39 @@ test('Google OIDC signature, issuer, audience and nonce are verified', async () 
   assert.equal(fetch.calls.length, 2);
 });
 
+test('Apple OIDC ES256 signature, issuer, audience and nonce are verified', async () => {
+  const { privateKey: applePrivateKey, publicKey: applePublicKey } = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
+  const appleJwk = applePublicKey.export({ format: 'jwk' });
+  appleJwk.kid = 'apple-test-key';
+  const apple = {
+    ...config,
+    apple: {
+      clientId: 'apple-client.test',
+      teamId: 'team.test',
+      keyId: 'apple-test-key',
+      privateKey: applePrivateKey.export({ format: 'pem', type: 'pkcs8' }),
+      redirectUri: 'https://campusmate.test/api/auth/apple/callback',
+    },
+  };
+  const enc = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
+  const head = enc({ alg: 'ES256', kid: appleJwk.kid, typ: 'JWT' });
+  const body = enc({
+    iss: 'https://appleid.apple.com',
+    aud: apple.apple.clientId,
+    sub: 'apple-subject',
+    nonce: 'apple-nonce',
+    email: 'private-relay@example.test',
+    email_verified: 'true',
+    exp: Math.floor(Date.now() / 1000) + 300,
+  });
+  const input = `${head}.${body}`;
+  const idToken = `${input}.${sign('sha256', Buffer.from(input), { key: applePrivateKey, dsaEncoding: 'ieee-p1363' }).toString('base64url')}`;
+  const service = createOAuthService(apple, async () => ({ ok: true, status: 200, json: async () => ({ keys: [appleJwk] }) }));
+  const claims = await service.verifyIdToken('apple', idToken, 'apple-nonce');
+  assert.equal(claims.sub, 'apple-subject');
+  await assert.rejects(service.verifyIdToken('apple', idToken, 'wrong-nonce'), { code: 'OAUTH_INVALID_TOKEN' });
+});
+
 test('provider HTTP failures and malformed tokens are surfaced as safe OAuth codes', async () => {
   const service = createOAuthService(config, async () => ({ ok: false, status: 401, json: async () => ({ secret: 'ignored' }) }));
   await assert.rejects(service.exchangeCode('google', 'code', 'verifier'), { code: 'OAUTH_GOOGLE_HTTP_401' });

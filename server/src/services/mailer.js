@@ -68,7 +68,19 @@ export function createMailer(config, fetchImpl = fetch) {
       `<p>The link expires in ${RESET_TTL_MINUTES} minutes and can be used once. If you did not ask for this, ignore this email; your password stays the same.</p>`;
     await deliver({ to, subject: 'Reset your CampusMate password', htmlContent, textContent });
   }
-  return { sendVerificationEmail, sendPasswordResetEmail };
+  async function sendDeadlineReminderEmail({ to, taskId, taskTitle, dueDate, reminderKey }) {
+    const urgency = reminderKey === 'overdue' ? 'is overdue' : `is due on ${dueDate}`;
+    const link = `${config.appBaseUrl}/dashboard#task-${encodeURIComponent(taskId)}`;
+    const textContent = `Your CampusMate task "${taskTitle}" ${urgency}. Review it: ${link}\n`;
+    const htmlContent = `<p>Your CampusMate task <strong>${escapeHtml(taskTitle)}</strong> ${escapeHtml(urgency)}.</p><p><a href="${escapeHtml(link)}">Review task in CampusMate</a>.</p>`;
+    if (config.transport === 'console') {
+      refuseConsoleInProduction();
+      console.log(`[mail:console] Deadline reminder for ${to}: ${taskTitle} (${reminderKey})`);
+      return;
+    }
+    await deliver({ to, subject: `CampusMate deadline reminder: ${taskTitle}`, htmlContent, textContent });
+  }
+  return { sendVerificationEmail, sendPasswordResetEmail, sendDeadlineReminderEmail };
 }
 
-export const { sendVerificationEmail, sendPasswordResetEmail } = createMailer({ ...env.mail, nodeEnv: env.nodeEnv });
+export const { sendVerificationEmail, sendPasswordResetEmail, sendDeadlineReminderEmail } = createMailer({ ...env.mail, nodeEnv: env.nodeEnv });

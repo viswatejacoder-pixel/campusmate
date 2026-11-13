@@ -1,4 +1,5 @@
 import Icon from './Icon.jsx';
+import NotificationBell from './NotificationBell.jsx';
 
 // Dashboard header (T-090): the task search (moved here from the filter bar) and the account. The page owns the text (the filter
 // draft's `q`), so Clear filters empties this box too. `error` is the same message validateTaskFilters() gives for the search text.
@@ -30,6 +31,7 @@ export default function TopBar({ user, search, onSearchChange, searchDisabled = 
         )}
       </form>
       <div className="account">
+        <NotificationBell />
         <span className="avatar" aria-hidden="true">{initial}</span>
         <div className="account-text">
           <span className="account-name break-anywhere">{name}</span>

@@ -73,3 +73,13 @@ test('M-04 console transport prints the link in development and is refused in pr
   );
   assert.equal(f.calls.length, 0, 'console transport never calls the network');
 });
+
+test('M-05 deadline reminder uses the existing Brevo transport', async () => {
+  const f = fakeFetch();
+  await createMailer(brevo, f).sendDeadlineReminderEmail({ to: 'user@example.test', taskId: 7, taskTitle: '<Essay>', dueDate: '2026-11-20', reminderKey: '3_days' });
+  const body = JSON.parse(f.calls[0].init.body);
+  assert.equal(f.calls[0].url, 'https://api.brevo.com/v3/smtp/email');
+  assert.match(body.subject, /deadline reminder/);
+  assert.ok(body.htmlContent.includes('&lt;Essay&gt;'));
+  assert.match(body.textContent, /dashboard#task-7/);
+});

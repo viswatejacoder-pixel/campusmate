@@ -50,6 +50,9 @@ if (missing.length > 0) {
       problems.push(`${label} OAuth redirect URI must use HTTPS in production`);
     }
   }
+  const vapid = ['VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY', 'VAPID_SUBJECT'];
+  const vapidPresent = vapid.filter((name) => e[name] && e[name].trim()).length;
+  if (vapidPresent > 0 && vapidPresent < vapid.length) problems.push(`Web Push configuration must provide all of: ${vapid.join(', ')}`);
   if (e.APP_BASE_URL && !/^https?:\/\/[^\s/]+$/.test(e.APP_BASE_URL.trim().replace(/\/+$/, ''))) problems.push('APP_BASE_URL must look like http://localhost:5173 (no path)');
   if (e.MAIL_FROM_EMAIL && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.MAIL_FROM_EMAIL.trim())) problems.push('MAIL_FROM_EMAIL must be an email address');
 }
@@ -99,6 +102,11 @@ export const env = Object.freeze({
       privateKey: e.APPLE_PRIVATE_KEY || '',
       redirectUri: (e.APPLE_REDIRECT_URI || '').trim(),
     }),
+  }),
+  push: Object.freeze({
+    publicKey: (e.VAPID_PUBLIC_KEY || '').trim(),
+    privateKey: (e.VAPID_PRIVATE_KEY || '').trim(),
+    subject: (e.VAPID_SUBJECT || '').trim(),
   }),
   // Test-server switch for the rate limiter; ignored in production.
   rateLimitDisabled: (e.NODE_ENV || 'development') !== 'production' && e.RATE_LIMIT_DISABLED === 'true',

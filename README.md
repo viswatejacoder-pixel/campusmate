@@ -16,7 +16,7 @@ B.Tech Web Development minor project.
 - Responsive layout (desktop and mobile)
 - Server-side validation and persistent database storage
 
-Out of scope: attendance, university/LMS integrations, collaboration, AI features, email notifications.
+Out of scope: attendance, university/LMS integrations, collaboration, and AI features.
 
 ## Tech stack
 React + Vite (plain JavaScript, plain CSS, `react-router-dom`) with `fetch`/JSON | Node.js + Express | MySQL-compatible database via `mysql2` | bcrypt-hashed passwords + server-side sessions | Git/GitHub.
@@ -84,14 +84,19 @@ The server must refuse to start if a required variable is missing. Real values l
 
 Set these exact HTTPS callback URLs in the provider dashboards:
 
-- Google: `https://YOUR_RENDER_HOST/api/auth/google/callback`
-- Apple: `https://YOUR_RENDER_HOST/api/auth/apple/callback`
+- Google: `https://campusmate-73eh.onrender.com/api/auth/google/callback`
+- Apple: `https://campusmate-73eh.onrender.com/api/auth/apple/callback`
 
 In Google Cloud Console, create an OAuth 2.0 Web application client, add the callback URL as an authorized redirect URI, and provide its client ID and client secret.
 
-In Apple Developer, create a Services ID for the web client, associate it with a Sign in with Apple configuration and the verified HTTPS domain, add the callback URL, then create a Sign in with Apple key. Provide the Services ID, Team ID, key ID, and downloaded private key contents (with newlines preserved or represented as `\n`). The Apple client ID is the Services ID, not the native bundle ID.
+In Apple Developer, create a Services ID for the web client, enable Sign in with Apple, add `campusmate-73eh.onrender.com` as the verified HTTPS domain, and add the exact Apple callback URL as a Return URL. Create a Sign in with Apple key for the associated configuration. Set Render’s `APPLE_CLIENT_ID` to the Services ID (not a native bundle ID), `APPLE_TEAM_ID` to the Apple Developer Team ID, `APPLE_KEY_ID` to the generated key ID, and `APPLE_PRIVATE_KEY` to the downloaded `.p8` contents with newlines preserved or represented as `\n`.
+
+In Render, add those five Apple variables plus `APPLE_REDIRECT_URI=https://campusmate-73eh.onrender.com/api/auth/apple/callback`, then redeploy. Keep the private key server-side; never add it to client variables or source control. Apple email must be present and verified in the ID token for a new account; the form-post `user` value is used only for the first-authorization display name.
 
 Apply [`server/sql/migrations/003_oauth_accounts.sql`](server/sql/migrations/003_oauth_accounts.sql) once before enabling either provider. It creates only the provider-identity table; it does not modify or link existing users.
+
+### Deadline notifications
+Apply [`server/sql/migrations/004_notifications.sql`](server/sql/migrations/004_notifications.sql) once with the existing database operator before enabling reminders. For TiDB, select the CampusMate database, run the migration as the approved database user, and verify the three tables and foreign keys before restarting Render; never run it repeatedly against production. In Render, set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, and `VAPID_SUBJECT` to one generated VAPID key pair and a `mailto:` subject (or leave all three unset to disable browser push gracefully). Email reminders reuse the existing `MAIL_TRANSPORT=brevo`, `BREVO_API_KEY`, `MAIL_FROM_EMAIL`, `MAIL_FROM_NAME`, and `APP_BASE_URL` configuration. The reminder worker scans persisted tasks every five minutes and after startup, so reminders survive restarts; Render free-tier sleep delays delivery until the service wakes.
 
 ## Scripts (PLANNED)
 `server`: `npm start` run API | `npm run dev` run with auto-restart (`node --watch`)

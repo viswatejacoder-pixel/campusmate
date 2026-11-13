@@ -100,7 +100,7 @@ test('M2-R08 a long title with no spaces gets the wrap class so it cannot break 
 test('M2-R09 TaskList renders one item per task, in the order given', () => {
   const second = { ...task, id: 13, title: 'Second task' };
   const html = render(h(TaskList, { tasks: [task, second] }));
-  assert.equal(html.split('<li class="task-item').length - 1, 2);
+  assert.equal(html.split('class="task-item').length - 1, 2);
   assert.ok(html.indexOf('DS assignment 2') < html.indexOf('Second task'));
 });
 

@@ -1,6 +1,6 @@
 // Scripted checks for TASK-01 to TASK-09, FIL-01 to FIL-05 and the API-level re-check of SUB-04 (docs/TESTING.md).
 // Uses only node:test and fetch (D-018). Run against a running server:
-//   $env:BASE_URL='http://localhost:3001'; node --test tests/tasks.api.test.js
+//   $env:BASE_URL='http://localhost:3000'; node --test tests/tasks.api.test.js
 // Creates fake accounts t050-<run>-<tag>@example.test in the LOCAL development database, plus the subjects and tasks they own.
 // It deletes nothing except through the API under test (tasks the tests delete themselves). Direct SQL is used only to READ rows,
 // and for one INSERT that must be refused by the database. At the end it prints the accounts it created and the cleanup SQL.
@@ -10,7 +10,7 @@ import { test, after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import pool from '../src/config/db.js';
 
-const BASE = process.env.BASE_URL || 'http://localhost:3001';
+const BASE = process.env.BASE_URL || 'http://localhost:3000';
 const PREFIX = `t050-${Date.now()}-`;
 const PASSWORD = 'Test-Pass-1234'; // fake, test-only
 const LEAKS = /node_modules|\bat\s+\S+\s+\(|Error:|stack|ER_|SELECT |INSERT |UPDATE |DELETE /i;
